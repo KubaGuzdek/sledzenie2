@@ -707,10 +707,13 @@
             // Handle authentication
             authSubmit.addEventListener('click', function() {
                 const password = authPassword.value;
+                showDebug('Login button clicked with password: ' + '*'.repeat(password.length));
                 
                 if (window.trackingCommunication) {
+                    showDebug('Using tracking communication for authentication');
                     // Set authentication callback first
                     window.trackingCommunication.setAuthenticationCallback(function(success, role) {
+                        showDebug('Auth callback received: ' + (success ? 'success' : 'failure') + ', role: ' + role);
                         if (success && role === 'organizer') {
                             authOverlay.style.display = 'none';
                             showDebug('Authentication successful');
@@ -723,6 +726,7 @@
                     
                     // Then authenticate
                     window.trackingCommunication.authenticateOrganizer(password);
+                    showDebug('Authentication request sent');
     } else {
         // Check password even if tracking communication is not available
         if (password === 'kingofthebay2025') {
