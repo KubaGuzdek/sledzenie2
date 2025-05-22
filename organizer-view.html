@@ -709,9 +709,7 @@
                 const password = authPassword.value;
                 
                 if (window.trackingCommunication) {
-                    window.trackingCommunication.authenticateOrganizer(password);
-                    
-                    // Set authentication callback
+                    // Set authentication callback first
                     window.trackingCommunication.setAuthenticationCallback(function(success, role) {
                         if (success && role === 'organizer') {
                             authOverlay.style.display = 'none';
@@ -722,6 +720,9 @@
                             showDebug('Authentication failed');
                         }
                     });
+                    
+                    // Then authenticate
+                    window.trackingCommunication.authenticateOrganizer(password);
     } else {
         // Check password even if tracking communication is not available
         if (password === 'kingofthebay2025') {

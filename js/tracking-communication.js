@@ -98,12 +98,9 @@ class TrackingCommunication {
     
     // Prompt for organizer authentication
     promptOrganizerAuthentication() {
-        // In a real app, this would show a UI prompt
-        // For now, we'll use a simple prompt
-        const password = prompt('Enter organizer password:');
-        if (password) {
-            this.authenticateOrganizer(password);
-        }
+        // Don't show a prompt in organizer view since we have a custom HTML form
+        // The HTML form will call authenticateOrganizer directly
+        console.log('Organizer authentication required - using HTML form');
     }
     
     // Authenticate as organizer
