@@ -722,12 +722,17 @@
                             showDebug('Authentication failed');
                         }
                     });
-                } else {
-                    // For demo purposes, allow any password
-                    authOverlay.style.display = 'none';
-                    showDebug('Authentication bypassed (tracking communication not available)');
-                    initializeOrganizerView();
-                }
+    } else {
+        // Check password even if tracking communication is not available
+        if (password === 'kingofthebay2025') {
+            authOverlay.style.display = 'none';
+            showDebug('Authentication successful (local check)');
+            initializeOrganizerView();
+        } else {
+            authError.style.display = 'block';
+            showDebug('Authentication failed (local check)');
+        }
+    }
             });
             
             // Allow Enter key to submit
