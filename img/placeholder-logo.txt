@@ -1,0 +1,8 @@
+Potrzebny jest plik logo.png w tym folderze.
+
+Proszę umieścić tutaj plik logo zawodów o nazwie "logo.png".
+Szczegółowe instrukcje znajdują się w pliku README.txt w tym samym folderze.
+
+Jeśli nie masz jeszcze logo, możesz tymczasowo użyć dowolnego obrazu PNG
+i zmienić jego nazwę na "logo.png", lub edytować pliki HTML, aby usunąć
+odniesienia do logo.

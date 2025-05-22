@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>King Of theBay - GPS Tracking</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <a href="organizer-view.html" style="position: fixed; top: 10px; right: 10px; background-color: #1a73e8; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; z-index: 1000;">
+            <i class="fas fa-users-cog"></i> Panel Organizatora
+        </a>
+        <!-- Main container that holds all screens -->
+        <div id="app" class="mobile-container">
+            <!-- Only one screen will be displayed at a time -->
+            
+            <!-- HOME SCREEN -->
+            <div id="home-screen" class="screen active">
+                <header class="app-header" style="background-color: white; color: #1a73e8; border-bottom: 1px solid rgba(0, 0, 0, 0.1);">
+                    <div style="display: flex; align-items: center; padding: 8px 15px; border-radius: 8px;">
+                        <img src="img/logo.png" alt="Logo zawodów" class="app-logo" style="height: 60px; margin-right: 10px;">
+                        <h1 class="app-title">King Of theBay</h1>
+                    </div>
+                </header>
+                
+                <div class="content">
+                    <div class="status-indicator">
+                        <i class="fas fa-satellite-dish status-icon status-good"></i>
+                        <div class="status-text">Sygnał GPS: Dobry</div>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="showScreen('map-screen')">
+                        <i class="fas fa-play-circle"></i> Rozpocznij śledzenie
+                    </button>
+                    
+                    <div class="status-indicator">
+                        <i class="fas fa-battery-three-quarters status-icon status-good"></i>
+                        <div class="status-text">Bateria: 85%</div>
+                    </div>
+                    
+                    <div class="status-indicator">
+                        <i class="fas fa-signal status-icon status-good"></i>
+                        <div class="status-text">Sygnał sieci: Dobry</div>
+                    </div>
+                </div>
+                
+                <nav class="nav-bar">
+                    <a href="#" class="nav-item active" onclick="showScreen('home-screen')">
+                        <i class="fas fa-home nav-icon"></i>
+                        <span>Start</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="showScreen('map-screen')">
+                        <i class="fas fa-map-marked-alt nav-icon"></i>
+                        <span>Mapa</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="showScreen('ready-screen')">
+                        <i class="fas fa-flag-checkered nav-icon"></i>
+                        <span>Start</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="showScreen('results-screen')">
+                        <i class="fas fa-trophy nav-icon"></i>
+                        <span>Wyniki</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="showScreen('settings-screen')">
+                        <i class="fas fa-cog nav-icon"></i>
+                        <span>Ustawienia</span>
+                    </a>
+                </nav>
+            </div>
+            
+            <!-- LIVE MAP SCREEN -->
+            <div id="map-screen" class="screen">
+                <header class="app-header" style="background-color: white; color: #1a73e8; border-bottom: 1px solid rgba(0, 0, 0, 0.1);">
+                    <div style="display: flex; align-items: center; padding: 8px 15px; border-radius: 8px;">
+                        <img src="img/logo.png" alt="Logo zawodów" class="app-logo" style="height: 60px; margin-right: 10px;">
+                        <h1 class="app-title">Mapa na żywo</h1>
+                    </div>
+                </header>
+                
+                <div class="content">
+                    <div class="map-container live-map">
+                        <div class="map-grid"></div>
+                        <div class="map-marker current-position"></div>
+                        <div class="compass">N</div>
+                        <div class="map-label">Zatoka Pucka</div>
+                    </div>
+                    
+                    <div class="stats-container">
+                        <div class="stat-card">
+                            <div class="stat-value">24.5</div>
+                            <div class="stat-label">km/h</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">3.2</div>
+                            <div class="stat-label">km</div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-primary" id="end-tracking-btn">
+                        <i class="fas fa-stop-circle"></i> Zakończ śledzenie
+                    </button>
+                    
+                    <button class="sos-button" id="sos-btn" style="touch-action: manipulation;">
+                        SOS
+                    </button>
+                </div>
+                
+                <nav class="nav-bar">
+                    <a href="#" class="nav-item" onclick="showScreen('home-screen')">
+                        <i class="fas fa-home nav-icon"></i>
+                        <span>Start</span>
+                    </a>
+                    <a href="#" class="nav-item active" onclick="showScreen('map-screen')">
+                        <i class="fas fa-map-marked-alt nav-icon"></i>
+                        <span>Mapa</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="showScreen('ready-screen')">
+                        <i class="fas fa-flag-checkered nav-icon"></i>
+                        <span>Start</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="showScreen('results-screen')">
+                        <i class="fas fa-trophy nav-icon"></i>
+                        <span>Wyniki</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="showScreen('settings-screen')">
+                        <i class="fas fa-cog nav-icon"></i>
+                        <span>Ustawienia</span>
+                    </a>
+                </nav>
+            </div>
+            
+            <!-- READY SCREEN -->
+            <div id="ready-screen" class="screen">
+                <header class="app-header" style="background-color: white; color: #1a73e8; border-bottom: 1px solid rgba(0, 0, 0, 0.1);">
+                    <div style="display: flex; align-items: center; padding: 8px 15px; border-radius: 8px;">
+                        <img src="img/logo.png" alt="Logo zawodów" class="app-logo" style="height: 60px; margin-right: 10px;">
+                        <h1 class="app-title">Gotowość do startu</h1>
+                    </div>
+                </header>
+                
+                <div class="content">
+                    <div class="countdown">
+                        <div class="countdown-value">5</div>
+                        <div class="countdown-label">Sekund do startu</div>
+                    </div>
+                    
+                    <div class="waiting-message">
+                        <div class="waiting-text">Oczekiwanie na sygnał startu...</div>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="showScreen('map-screen')">
+                        <i class="fas fa-check-circle"></i> Potwierdzam gotowość
+                    </button>
+                    
+                    <button class="btn btn-danger" onclick="showScreen('home-screen')">
+                        <i class="fas fa-times-circle"></i> Anuluj
+                    </button>
+                </div>
+                
+                <nav class="nav-bar">
+                    <a href="#" class="nav-item" onclick="showScreen('home-screen')">
+                        <i class="fas fa-home nav-icon"></i>
+                        <span>Start</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="showScreen('map-screen')">
+                        <i class="fas fa-map-marked-alt nav-icon"></i>
+                        <span>Mapa</span>
+                    </a>
+                    <a href="#" class="nav-item active" onclick="showScreen('ready-screen')">
+                        <i class="fas fa-flag-checkered nav-icon"></i>
+                        <span>Start</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="showScreen('results-screen')">
+                        <i class="fas fa-trophy nav-icon"></i>
+                        <span>Wyniki</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="showScreen('settings-screen')">
+                        <i class="fas fa-cog nav-icon"></i>
+                        <span>Ustawienia</span>
+                    </a>
+                </nav>
+            </div>
+            
+            <!-- SETTINGS SCREEN -->
+            <div id="settings-screen" class="screen">
+                <header class="app-header" style="background-color: white; color: #1a73e8; border-bottom: 1px solid rgba(0, 0, 0, 0.1);">
+                    <div style="display: flex; align-items: center; padding: 8px 15px; border-radius: 8px;">
+                        <img src="img/logo.png" alt="Logo zawodów" class="app-logo" style="height: 60px; margin-right: 10px;">
+                        <h1 class="app-title">Ustawienia</h1>
+                    </div>
+                </header>
+                
+                <div class="content">
+                    <form>
+                        <div class="form-group">
+                            <label class="form-label" for="name">Imię i nazwisko</label>
+                            <input type="text" id="name" class="form-input" placeholder="Jan Kowalski">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="sail-number">Numer żagla</label>
+                            <input type="text" id="sail-number" class="form-input" placeholder="POL-123">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Kolor śledzenia</label>
+                            <div class="color-options">
+                                <div class="color-option selected" style="background-color: #1a73e8;"></div>
+                                <div class="color-option" style="background-color: #4caf50;"></div>
+                                <div class="color-option" style="background-color: #f44336;"></div>
+                                <div class="color-option" style="background-color: #ff9800;"></div>
+                                <div class="color-option" style="background-color: #9c27b0;"></div>
+                            </div>
+                        </div>
+                        
+                        <button type="button" class="btn btn-primary" onclick="showScreen('home-screen')">
+                            <i class="fas fa-save"></i> Zapisz ustawienia
+                        </button>
+                    </form>
+                </div>
+                
+                <nav class="nav-bar">
+                    <a href="#" class="nav-item" onclick="showScreen('home-screen')">
+                        <i class="fas fa-home nav-icon"></i>
+                        <span>Start</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="showScreen('map-screen')">
+                        <i class="fas fa-map-marked-alt nav-icon"></i>
+                        <span>Mapa</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="showScreen('ready-screen')">
+                        <i class="fas fa-flag-checkered nav-icon"></i>
+                        <span>Start</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="showScreen('results-screen')">
+                        <i class="fas fa-trophy nav-icon"></i>
+                        <span>Wyniki</span>
+                    </a>
+                    <a href="#" class="nav-item active" onclick="showScreen('settings-screen')">
+                        <i class="fas fa-cog nav-icon"></i>
+                        <span>Ustawienia</span>
+                    </a>
+                </nav>
+            </div>
+            
+            <!-- RESULTS SCREEN -->
+            <div id="results-screen" class="screen">
+                <header class="app-header" style="background-color: white; color: #1a73e8; border-bottom: 1px solid rgba(0, 0, 0, 0.1);">
+                    <div style="display: flex; align-items: center; padding: 8px 15px; border-radius: 8px;">
+                        <img src="img/logo.png" alt="Logo zawodów" class="app-logo" style="height: 60px; margin-right: 10px;">
+                        <h1 class="app-title">Wyniki zawodów</h1>
+                    </div>
+                </header>
+                
+                <div class="content">
+                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+                        <h2 style="margin: 0; color: #1a73e8; font-size: 18px;">Twoja pozycja</h2>
+                        <div style="display: flex; align-items: center; justify-content: center; margin-top: 10px;">
+                            <div style="font-size: 48px; font-weight: 700; color: #1a73e8;">3</div>
+                            <div style="margin-left: 10px; text-align: left;">
+                                <div style="font-weight: 500;">miejsce</div>
+                                <div style="color: #666; font-size: 14px;">z 12 zawodników</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="margin: 0 0 10px 0; color: #333;">Wyniki wyścigów</h3>
+                        <div style="background-color: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden;">
+                            <div style="display: flex; padding: 12px 15px; border-bottom: 1px solid #eee; font-weight: 500; color: #666;">
+                                <div style="flex: 0 0 40px;">Poz.</div>
+                                <div style="flex: 1;">Zawodnik</div>
+                                <div style="flex: 0 0 80px; text-align: right;">Czas</div>
+                            </div>
+                            
+                            <div style="display: flex; padding: 12px 15px; border-bottom: 1px solid #eee; background-color: #f0f7ff;">
+                                <div style="flex: 0 0 40px; font-weight: 700; color: gold;">1</div>
+                                <div style="flex: 1;">Anna Nowak (POL-456)</div>
+                                <div style="flex: 0 0 80px; text-align: right;">38:12</div>
+                            </div>
+                            
+                            <div style="display: flex; padding: 12px 15px; border-bottom: 1px solid #eee;">
+                                <div style="flex: 0 0 40px; font-weight: 700; color: silver;">2</div>
+                                <div style="flex: 1;">Piotr Wiśniewski (POL-789)</div>
+                                <div style="flex: 0 0 80px; text-align: right;">39:45</div>
+                            </div>
+                            
+                            <div style="display: flex; padding: 12px 15px; border-bottom: 1px solid #eee; background-color: rgba(26, 115, 232, 0.1);">
+                                <div style="flex: 0 0 40px; font-weight: 700; color: #cd7f32;">3</div>
+                                <div style="flex: 1;">Jan Kowalski (POL-123)</div>
+                                <div style="flex: 0 0 80px; text-align: right;">41:20</div>
+                            </div>
+                            
+                            <div style="display: flex; padding: 12px 15px; border-bottom: 1px solid #eee;">
+                                <div style="flex: 0 0 40px;">4</div>
+                                <div style="flex: 1;">Tomasz Lewandowski (POL-567)</div>
+                                <div style="flex: 0 0 80px; text-align: right;">42:08</div>
+                            </div>
+                            
+                            <div style="display: flex; padding: 12px 15px;">
+                                <div style="flex: 0 0 40px;">5</div>
+                                <div style="flex: 1;">Katarzyna Dąbrowska (POL-234)</div>
+                                <div style="flex: 0 0 80px; text-align: right;">43:51</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-primary" style="flex: 1;">
+                            <i class="fas fa-share-alt"></i> Udostępnij wyniki
+                        </button>
+                        <button class="btn" style="flex: 1; background-color: #f8f9fa; color: #333;">
+                            <i class="fas fa-history"></i> Poprzednie wyścigi
+                        </button>
+                    </div>
+                </div>
+                
+                <nav class="nav-bar">
+                    <a href="#" class="nav-item" onclick="showScreen('home-screen')">
+                        <i class="fas fa-home nav-icon"></i>
+                        <span>Start</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="showScreen('map-screen')">
+                        <i class="fas fa-map-marked-alt nav-icon"></i>
+                        <span>Mapa</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="showScreen('ready-screen')">
+                        <i class="fas fa-flag-checkered nav-icon"></i>
+                        <span>Start</span>
+                    </a>
+                    <a href="#" class="nav-item active" onclick="showScreen('results-screen')">
+                        <i class="fas fa-trophy nav-icon"></i>
+                        <span>Wyniki</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="showScreen('settings-screen')">
+                        <i class="fas fa-cog nav-icon"></i>
+                        <span>Ustawienia</span>
+                    </a>
+                </nav>
+            </div>
+            
+            <!-- SUMMARY SCREEN -->
+            <div id="summary-screen" class="screen">
+                <header class="app-header" style="background-color: white; color: #1a73e8; border-bottom: 1px solid rgba(0, 0, 0, 0.1);">
+                    <div style="display: flex; align-items: center; padding: 8px 15px; border-radius: 8px;">
+                        <img src="img/logo.png" alt="Logo zawodów" class="app-logo" style="height: 60px; margin-right: 10px;">
+                        <h1 class="app-title">Podsumowanie trasy</h1>
+                    </div>
+                </header>
+                
+                <div class="content">
+                    <div class="map-container route-map">
+                        <div class="map-grid"></div>
+                        <svg class="route-path" viewBox="0 0 400 400">
+                            <path d="M80,280 C120,260 150,240 180,200 C210,160 240,140 320,120" />
+                        </svg>
+                        <div class="map-marker start-marker"></div>
+                        <div class="map-marker end-marker"></div>
+                        <div class="compass">N</div>
+                        <div class="map-label">Trasa: 8.7 km</div>
+                    </div>
+                    
+                    <div class="stats-container">
+                        <div class="stat-card">
+                            <div class="stat-value">8.7</div>
+                            <div class="stat-label">km</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">22.3</div>
+                            <div class="stat-label">km/h średnio</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">35.8</div>
+                            <div class="stat-label">km/h max</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">42</div>
+                            <div class="stat-label">min</div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="showScreen('home-screen')">
+                        <i class="fas fa-share-alt"></i> Udostępnij wyniki
+                    </button>
+                    
+                    <button class="btn btn-success" onclick="showScreen('home-screen')">
+                        <i class="fas fa-home"></i> Powrót do ekranu głównego
+                    </button>
+                </div>
+                
+                <nav class="nav-bar">
+                    <a href="#" class="nav-item" onclick="showScreen('home-screen')">
+                        <i class="fas fa-home nav-icon"></i>
+                        <span>Start</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="showScreen('map-screen')">
+                        <i class="fas fa-map-marked-alt nav-icon"></i>
+                        <span>Mapa</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="showScreen('ready-screen')">
+                        <i class="fas fa-flag-checkered nav-icon"></i>
+                        <span>Start</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="showScreen('results-screen')">
+                        <i class="fas fa-trophy nav-icon"></i>
+                        <span>Wyniki</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="showScreen('settings-screen')">
+                        <i class="fas fa-cog nav-icon"></i>
+                        <span>Ustawienia</span>
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/tracking-communication.js"></script>
+    <script src="js/gps-tracking.js"></script>
+    
+    <!-- Debug information panel -->
+    <div id="debug-panel" style="position: fixed; bottom: 70px; left: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 10px; border-radius: 5px; font-size: 12px; z-index: 9999; display: none; max-height: 150px; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+            <strong>Debug Info</strong>
+            <button onclick="document.getElementById('debug-panel').style.display='none'" style="background: none; border: none; color: white; font-size: 16px;">&times;</button>
+        </div>
+        <div id="debug-content"></div>
+    </div>
+    
+    <script>
+        // Debug functions
+        function showDebug(message) {
+            const debugPanel = document.getElementById('debug-panel');
+            const debugContent = document.getElementById('debug-content');
+            
+            // Show the panel
+            debugPanel.style.display = 'block';
+            
+            // Add timestamp to message
+            const now = new Date();
+            const timestamp = now.getHours().toString().padStart(2, '0') + ':' + 
+                             now.getMinutes().toString().padStart(2, '0') + ':' + 
+                             now.getSeconds().toString().padStart(2, '0');
+            
+            // Add the message to the content
+            debugContent.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            
+            // Scroll to bottom
+            debugContent.scrollTop = debugContent.scrollHeight;
+        }
+        
+        // Show connection info on load
+        window.addEventListener('load', function() {
+            // Show debug panel with connection info
+            showDebug('App loaded successfully');
+            showDebug('User Agent: ' + navigator.userAgent);
+            showDebug('Checking GPS permissions...');
+            
+            // Check if geolocation is available
+            if (navigator.geolocation) {
+                showDebug('Geolocation API is available');
+            } else {
+                showDebug('ERROR: Geolocation API not available');
+            }
+            
+            // Check if we're on a mobile device
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            showDebug('Device type: ' + (isMobile ? 'Mobile' : 'Desktop'));
+            
+            // Show server connection info
+            showDebug('Attempting to connect to server...');
+        });
+        // Simple function to switch between screens
+        function showScreen(screenId) {
+            showDebug('Switching to screen: ' + screenId);
+            // Hide all screens
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(screen => {
+                screen.classList.remove('active');
+            });
+            
+            // Show the selected screen
+            document.getElementById(screenId).classList.add('active');
+            
+            // Update navigation
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Find and activate the corresponding nav item
+            const activeNavItems = document.querySelectorAll(`.nav-item[onclick*="${screenId}"]`);
+            activeNavItems.forEach(item => {
+                item.classList.add('active');
+            });
+        }
+        
+        // Initialize color picker functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up color picker
+            const colorOptions = document.querySelectorAll('.color-option');
+            colorOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Remove selected class from all options
+                    colorOptions.forEach(opt => opt.classList.remove('selected'));
+                    // Add selected class to clicked option
+                    this.classList.add('selected');
+                    
+                    // Store the selected color (could be used for tracking)
+                    const selectedColor = this.style.backgroundColor;
+                    console.log('Selected color:', selectedColor);
+                    
+                    // You could update the route color in the map here
+                    // For demo purposes, we'll update the route path stroke color
+                    const routePaths = document.querySelectorAll('.route-path path');
+                    routePaths.forEach(path => {
+                        path.style.stroke = selectedColor;
+                    });
+                });
+            });
+            
+            // Simulate countdown on ready screen
+            let countdownValue = 5;
+            let countdownInterval;
+            
+            // Function to start countdown when ready screen is shown
+            function startCountdown() {
+                const countdownElement = document.querySelector('.countdown-value');
+                if (!countdownElement) return;
+                
+                // Reset countdown
+                countdownValue = 5;
+                countdownElement.textContent = countdownValue;
+                
+                // Clear any existing interval
+                if (countdownInterval) clearInterval(countdownInterval);
+                
+                // Start new countdown
+                countdownInterval = setInterval(() => {
+                    countdownValue--;
+                    countdownElement.textContent = countdownValue;
+                    
+                    if (countdownValue <= 0) {
+                        clearInterval(countdownInterval);
+                        // Auto-navigate to map screen after countdown
+                        setTimeout(() => showScreen('map-screen'), 500);
+                    }
+                }, 1000);
+            }
+            
+            // Add event listener to ready screen button
+            const readyButton = document.querySelector('#ready-screen .btn-primary');
+            if (readyButton) {
+                readyButton.addEventListener('click', startCountdown);
+            }
+            
+            // Add event listener to SOS button
+            const sosButton = document.querySelector('.sos-button');
+            if (sosButton) {
+                console.log('SOS button found, adding event listener');
+                sosButton.addEventListener('click', function() {
+                    console.log('SOS button clicked!');
+                    showDebug('SOS button pressed! Sending emergency signal...');
+                    
+                    // If we have a GPS tracker and communication module, send the SOS
+                    if (window.gpsTracker && window.trackingCommunication) {
+                        const position = window.gpsTracker.getStatus().currentPosition;
+                        console.log('Sending SOS with position:', position);
+                        window.trackingCommunication.sendSOS(position);
+                        showDebug('SOS signal sent with position: ' + JSON.stringify(position));
+                    } else {
+                        console.error('Could not send SOS - tracking modules not initialized');
+                        showDebug('ERROR: Could not send SOS - tracking modules not initialized');
+                        if (!window.gpsTracker) console.error('gpsTracker not found');
+                        if (!window.trackingCommunication) console.error('trackingCommunication not found');
+                    }
+                    
+                    alert('SOS sygnał wysłany! Pomoc jest w drodze.');
+                });
+            } else {
+                console.error('SOS button not found in the DOM');
+            }
+            
+            // Add event listener to end tracking button
+            const endTrackingBtn = document.getElementById('end-tracking-btn');
+            if (endTrackingBtn) {
+                endTrackingBtn.addEventListener('click', function() {
+                    showDebug('Ending tracking session');
+                    
+                    // Stop tracking if GPS tracker is available
+                    if (window.gpsTracker) {
+                        window.gpsTracker.stopTracking();
+                        showDebug('GPS tracking stopped');
+                    }
+                    
+                    // Stop sending updates if communication module is available
+                    if (window.trackingCommunication) {
+                        window.trackingCommunication.stopSending();
+                        showDebug('Position updates stopped');
+                    }
+                    
+                    showScreen('summary-screen');
+                });
+            }
+            
+            // Add a debug button to the home screen
+            const homeScreen = document.getElementById('home-screen');
+            if (homeScreen) {
+                const debugBtn = document.createElement('button');
+                debugBtn.className = 'btn';
+                debugBtn.style.marginTop = '20px';
+                debugBtn.style.backgroundColor = '#f8f9fa';
+                debugBtn.style.color = '#333';
+                debugBtn.innerHTML = '<i class="fas fa-bug"></i> Show Debug Info';
+                debugBtn.addEventListener('click', function() {
+                    document.getElementById('debug-panel').style.display = 'block';
+                    showDebug('Debug panel opened manually');
+                });
+                
+                const content = homeScreen.querySelector('.content');
+                if (content) {
+                    content.appendChild(debugBtn);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

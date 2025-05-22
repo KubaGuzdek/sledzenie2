@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>King Of theBay - Panel Organizatora</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Specific styles for organizer view */
+        body {
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .organizer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .organizer-header {
+            background-color: #1a73e8;
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .organizer-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .organizer-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .organizer-btn {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .organizer-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .organizer-content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            height: calc(100vh - 100px);
+        }
+        
+        .participants-list {
+            background-color: #f8f9fa;
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid #e0e0e0;
+        }
+        
+        .participant-item {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .participant-item:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .participant-item.active {
+            border-left: 4px solid #1a73e8;
+        }
+        
+        .participant-item.sos {
+            border-left: 4px solid #f44336;
+            background-color: rgba(244, 67, 54, 0.1);
+        }
+        
+        .participant-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .participant-name {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .participant-sail {
+            background-color: #1a73e8;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .participant-status {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .map-container {
+            height: 100%;
+            position: relative;
+        }
+        
+        .organizer-map {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #64b5f6 0%, #1a73e8 100%);
+        }
+        
+        .map-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .map-control-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .map-control-btn:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .participant-marker {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            border: 2px solid white;
+            cursor: pointer;
+        }
+        
+        .participant-marker.sos {
+            animation: pulse-danger 2s infinite;
+        }
+        
+        .participant-tooltip {
+            position: absolute;
+            background-color: white;
+            border-radius: 4px;
+            padding: 8px 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            font-size: 14px;
+            transform: translateY(-100%);
+            margin-top: -10px;
+            white-space: nowrap;
+            display: none;
+        }
+        
+        .participant-marker:hover .participant-tooltip {
+            display: block;
+        }
+        
+        .race-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .race-btn {
+            padding: 10px 20px;
+            border-radius: 4px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .race-btn-primary {
+            background-color: #1a73e8;
+            color: white;
+        }
+        
+        .race-btn-danger {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .race-btn-warning {
+            background-color: #ff9800;
+            color: white;
+        }
+        
+        .search-box {
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        
+        .filter-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .filter-tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .filter-tab.active {
+            border-bottom-color: #1a73e8;
+            color: #1a73e8;
+            font-weight: 500;
+        }
+        
+        .notification-badge {
+            background-color: #f44336;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+        
+        .map-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" style="position: fixed; top: 10px; left: 10px; background-color: #1a73e8; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; z-index: 1000;">
+        <i class="fas fa-user"></i> Widok Zawodnika
+    </a>
+    
+    <div class="organizer-container">
+        <header class="organizer-header" style="background-color: white; color: #1a73e8; border-bottom: 1px solid rgba(0, 0, 0, 0.1);">
+            <div style="display: flex; align-items: center; padding: 8px 15px; border-radius: 8px;">
+                <img src="img/logo.png" alt="Logo zawodów" style="height: 60px; margin-right: 15px;">
+                <h1 class="organizer-title">Panel Organizatora King Of theBay</h1>
+            </div>
+            <div class="organizer-actions">
+                <button class="organizer-btn" style="background-color: #1a73e8; color: white;" id="results-btn">
+                    <i class="fas fa-trophy"></i> Wyniki
+                </button>
+                <button class="organizer-btn" style="background-color: #1a73e8; color: white;">
+                    <i class="fas fa-bullhorn"></i> Komunikat
+                </button>
+                <button class="organizer-btn" style="background-color: #1a73e8; color: white;">
+                    <i class="fas fa-cog"></i> Ustawienia
+                </button>
+            </div>
+        </header>
+        
+        <div class="organizer-content">
+            <div class="participants-list">
+                <input type="text" class="search-box" placeholder="Szukaj zawodnika...">
+                
+                <div class="filter-tabs">
+                    <div class="filter-tab active">Wszyscy (12)</div>
+                    <div class="filter-tab">Na trasie (8)</div>
+                    <div class="filter-tab">Oczekujący (3)</div>
+                    <div class="filter-tab">SOS <span class="notification-badge">1</span></div>
+                    <div class="filter-tab">Wyniki</div>
+                </div>
+                
+                <div class="participant-item sos">
+                    <div class="participant-header">
+                        <div class="participant-name">Marek Kowalski</div>
+                        <div class="participant-sail">POL-123</div>
+                    </div>
+                    <div class="participant-status">
+                        <div class="status-indicator">
+                            <i class="fas fa-exclamation-triangle status-bad"></i> SOS
+                        </div>
+                        <div>3.2 km</div>
+                    </div>
+                </div>
+                
+                <div class="participant-item active">
+                    <div class="participant-header">
+                        <div class="participant-name">Anna Nowak</div>
+                        <div class="participant-sail">POL-456</div>
+                    </div>
+                    <div class="participant-status">
+                        <div class="status-indicator">
+                            <i class="fas fa-satellite-dish status-good"></i> GPS OK
+                        </div>
+                        <div>5.7 km</div>
+                    </div>
+                </div>
+                
+                <div class="participant-item">
+                    <div class="participant-header">
+                        <div class="participant-name">Piotr Wiśniewski</div>
+                        <div class="participant-sail">POL-789</div>
+                    </div>
+                    <div class="participant-status">
+                        <div class="status-indicator">
+                            <i class="fas fa-satellite-dish status-good"></i> GPS OK
+                        </div>
+                        <div>4.1 km</div>
+                    </div>
+                </div>
+                
+                <div class="participant-item">
+                    <div class="participant-header">
+                        <div class="participant-name">Katarzyna Dąbrowska</div>
+                        <div class="participant-sail">POL-234</div>
+                    </div>
+                    <div class="participant-status">
+                        <div class="status-indicator">
+                            <i class="fas fa-satellite-dish status-warning"></i> GPS Słaby
+                        </div>
+                        <div>2.8 km</div>
+                    </div>
+                </div>
+                
+                <div class="participant-item">
+                    <div class="participant-header">
+                        <div class="participant-name">Tomasz Lewandowski</div>
+                        <div class="participant-sail">POL-567</div>
+                    </div>
+                    <div class="participant-status">
+                        <div class="status-indicator">
+                            <i class="fas fa-satellite-dish status-good"></i> GPS OK
+                        </div>
+                        <div>6.3 km</div>
+                    </div>
+                </div>
+                
+                <div class="participant-item">
+                    <div class="participant-header">
+                        <div class="participant-name">Magdalena Zielińska</div>
+                        <div class="participant-sail">POL-890</div>
+                    </div>
+                    <div class="participant-status">
+                        <div class="status-indicator">
+                            <i class="fas fa-flag-checkered"></i> Oczekuje
+                        </div>
+                        <div>0.0 km</div>
+                    </div>
+                </div>
+                
+                <div class="participant-item">
+                    <div class="participant-header">
+                        <div class="participant-name">Krzysztof Szymański</div>
+                        <div class="participant-sail">POL-345</div>
+                    </div>
+                    <div class="participant-status">
+                        <div class="status-indicator">
+                            <i class="fas fa-flag-checkered"></i> Oczekuje
+                        </div>
+                        <div>0.0 km</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Results management panel (hidden by default) -->
+            <div id="results-panel" class="map-container" style="display: none; padding: 20px; overflow-y: auto;">
+                <h2 style="margin-top: 0; color: #1a73e8; font-size: 24px;">Zarządzanie wynikami wyścigów</h2>
+                
+                <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+                    <div style="flex: 1;">
+                        <h3 style="margin-top: 0; color: #333;">Aktualny wyścig</h3>
+                        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px;">
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 500;">Nazwa wyścigu</label>
+                                <input type="text" value="King Of theBay 2025 - Wyścig 1" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 500;">Data</label>
+                                <input type="date" value="2025-03-26" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 500;">Status</label>
+                                <select style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                                    <option>W trakcie</option>
+                                    <option>Zakończony</option>
+                                    <option>Anulowany</option>
+                                </select>
+                            </div>
+                            <button class="race-btn race-btn-primary" style="width: 100%;">
+                                <i class="fas fa-save"></i> Zapisz zmiany
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="flex: 1;">
+                        <h3 style="margin-top: 0; color: #333;">Dodaj nowy wyścig</h3>
+                        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px;">
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 500;">Nazwa wyścigu</label>
+                                <input type="text" placeholder="Np. King Of theBay 2025 - Wyścig 2" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 500;">Data</label>
+                                <input type="date" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 500;">Trasa</label>
+                                <select style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
+                                    <option>Standardowa</option>
+                                    <option>Wydłużona</option>
+                                    <option>Zaawansowana</option>
+                                </select>
+                            </div>
+                            <button class="race-btn race-btn-primary" style="width: 100%;">
+                                <i class="fas fa-plus"></i> Utwórz nowy wyścig
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 style="color: #333;">Wyniki zawodników</h3>
+                <div style="background-color: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden; margin-bottom: 20px;">
+                    <div style="display: flex; padding: 12px 15px; border-bottom: 1px solid #eee; font-weight: 500; color: #666; background-color: #f8f9fa;">
+                        <div style="flex: 0 0 40px;">Poz.</div>
+                        <div style="flex: 1;">Zawodnik</div>
+                        <div style="flex: 0 0 120px;">Czas</div>
+                        <div style="flex: 0 0 100px;">Akcje</div>
+                    </div>
+                    
+                    <div style="display: flex; padding: 12px 15px; border-bottom: 1px solid #eee; align-items: center;">
+                        <div style="flex: 0 0 40px; font-weight: 700;">1</div>
+                        <div style="flex: 1;">Anna Nowak (POL-456)</div>
+                        <div style="flex: 0 0 120px;">
+                            <input type="text" value="38:12" style="width: 80px; padding: 5px; border-radius: 4px; border: 1px solid #ddd;">
+                        </div>
+                        <div style="flex: 0 0 100px;">
+                            <button style="background-color: #1a73e8; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+                                <i class="fas fa-save"></i>
+                            </button>
+                            <button style="background-color: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-left: 5px;">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; padding: 12px 15px; border-bottom: 1px solid #eee; align-items: center;">
+                        <div style="flex: 0 0 40px; font-weight: 700;">2</div>
+                        <div style="flex: 1;">Piotr Wiśniewski (POL-789)</div>
+                        <div style="flex: 0 0 120px;">
+                            <input type="text" value="39:45" style="width: 80px; padding: 5px; border-radius: 4px; border: 1px solid #ddd;">
+                        </div>
+                        <div style="flex: 0 0 100px;">
+                            <button style="background-color: #1a73e8; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+                                <i class="fas fa-save"></i>
+                            </button>
+                            <button style="background-color: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-left: 5px;">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; padding: 12px 15px; border-bottom: 1px solid #eee; align-items: center;">
+                        <div style="flex: 0 0 40px; font-weight: 700;">3</div>
+                        <div style="flex: 1;">Jan Kowalski (POL-123)</div>
+                        <div style="flex: 0 0 120px;">
+                            <input type="text" value="41:20" style="width: 80px; padding: 5px; border-radius: 4px; border: 1px solid #ddd;">
+                        </div>
+                        <div style="flex: 0 0 100px;">
+                            <button style="background-color: #1a73e8; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+                                <i class="fas fa-save"></i>
+                            </button>
+                            <button style="background-color: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-left: 5px;">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; padding: 12px 15px; border-bottom: 1px solid #eee; align-items: center;">
+                        <div style="flex: 0 0 40px; font-weight: 700;">4</div>
+                        <div style="flex: 1;">Tomasz Lewandowski (POL-567)</div>
+                        <div style="flex: 0 0 120px;">
+                            <input type="text" value="42:08" style="width: 80px; padding: 5px; border-radius: 4px; border: 1px solid #ddd;">
+                        </div>
+                        <div style="flex: 0 0 100px;">
+                            <button style="background-color: #1a73e8; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+                                <i class="fas fa-save"></i>
+                            </button>
+                            <button style="background-color: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-left: 5px;">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; padding: 12px 15px; align-items: center;">
+                        <div style="flex: 0 0 40px; font-weight: 700;">5</div>
+                        <div style="flex: 1;">Katarzyna Dąbrowska (POL-234)</div>
+                        <div style="flex: 0 0 120px;">
+                            <input type="text" value="43:51" style="width: 80px; padding: 5px; border-radius: 4px; border: 1px solid #ddd;">
+                        </div>
+                        <div style="flex: 0 0 100px;">
+                            <button style="background-color: #1a73e8; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+                                <i class="fas fa-save"></i>
+                            </button>
+                            <button style="background-color: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-left: 5px;">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button class="race-btn race-btn-primary" style="flex: 1;">
+                        <i class="fas fa-plus"></i> Dodaj zawodnika
+                    </button>
+                    <button class="race-btn" style="flex: 1; background-color: #4caf50; color: white;">
+                        <i class="fas fa-file-export"></i> Eksportuj wyniki
+                    </button>
+                    <button class="race-btn" style="flex: 1; background-color: #ff9800; color: white;">
+                        <i class="fas fa-share-alt"></i> Publikuj wyniki
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Map view (default) -->
+            <div id="map-view" class="map-container">
+                <div class="organizer-map">
+                    <div class="map-grid"></div>
+                    
+                    <!-- Participant markers on the map -->
+                    <div class="participant-marker" style="top: 30%; left: 40%; background-color: #1a73e8;">
+                        <div class="participant-tooltip">Anna Nowak (POL-456)</div>
+                    </div>
+                    
+                    <div class="participant-marker" style="top: 45%; left: 55%; background-color: #4caf50;">
+                        <div class="participant-tooltip">Piotr Wiśniewski (POL-789)</div>
+                    </div>
+                    
+                    <div class="participant-marker" style="top: 60%; left: 35%; background-color: #ff9800;">
+                        <div class="participant-tooltip">Katarzyna Dąbrowska (POL-234)</div>
+                    </div>
+                    
+                    <div class="participant-marker" style="top: 25%; left: 65%; background-color: #9c27b0;">
+                        <div class="participant-tooltip">Tomasz Lewandowski (POL-567)</div>
+                    </div>
+                    
+                    <div class="participant-marker sos" style="top: 50%; left: 25%; background-color: #f44336;">
+                        <div class="participant-tooltip">Marek Kowalski (POL-123) - SOS!</div>
+                    </div>
+                </div>
+                
+                <div class="map-controls">
+                    <button class="map-control-btn">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    <button class="map-control-btn">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button class="map-control-btn">
+                        <i class="fas fa-location-arrow"></i>
+                    </button>
+                    <button class="map-control-btn">
+                        <i class="fas fa-layer-group"></i>
+                    </button>
+                </div>
+                
+                <div class="race-controls">
+                    <button class="race-btn race-btn-primary">
+                        <i class="fas fa-flag-checkered"></i> Start wyścigu
+                    </button>
+                    <button class="race-btn race-btn-warning">
+                        <i class="fas fa-pause-circle"></i> Wstrzymaj
+                    </button>
+                    <button class="race-btn race-btn-danger">
+                        <i class="fas fa-stop-circle"></i> Zakończ wyścig
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Debug information panel -->
+    <div id="debug-panel" style="position: fixed; bottom: 70px; left: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 10px; border-radius: 5px; font-size: 12px; z-index: 9999; display: none; max-height: 150px; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+            <strong>Debug Info (Organizer)</strong>
+            <button onclick="document.getElementById('debug-panel').style.display='none'" style="background: none; border: none; color: white; font-size: 16px;">&times;</button>
+        </div>
+        <div id="debug-content"></div>
+    </div>
+    
+    <script src="js/tracking-communication.js"></script>
+    <script src="js/gps-tracking.js"></script>
+    <script src="js/organizer-tracking.js"></script>
+    <script>
+        // Debug function
+        function showDebug(message) {
+            const debugPanel = document.getElementById('debug-panel');
+            const debugContent = document.getElementById('debug-content');
+            
+            // Show the panel
+            debugPanel.style.display = 'block';
+            
+            // Add timestamp to message
+            const now = new Date();
+            const timestamp = now.getHours().toString().padStart(2, '0') + ':' + 
+                             now.getMinutes().toString().padStart(2, '0') + ':' + 
+                             now.getSeconds().toString().padStart(2, '0');
+            
+            // Add the message to the content
+            debugContent.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            
+            // Scroll to bottom
+            debugContent.scrollTop = debugContent.scrollHeight;
+        }
+        
+        // Simple demo functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Make participant items selectable
+            const participantItems = document.querySelectorAll('.participant-item');
+            participantItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    // Remove active class from all items
+                    participantItems.forEach(i => {
+                        if (!i.classList.contains('sos')) {
+                            i.classList.remove('active');
+                        }
+                    });
+                    // Add active class to clicked item
+                    if (!this.classList.contains('sos')) {
+                        this.classList.add('active');
+                    }
+                });
+            });
+            
+            // Make filter tabs selectable
+            const filterTabs = document.querySelectorAll('.filter-tab');
+            filterTabs.forEach((tab, index) => {
+                tab.addEventListener('click', function() {
+                    filterTabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Toggle between map view and results panel when "Wyniki" tab is clicked
+                    const mapView = document.getElementById('map-view');
+                    const resultsPanel = document.getElementById('results-panel');
+                    
+                    if (index === 4) { // "Wyniki" tab (5th tab, index 4)
+                        mapView.style.display = 'none';
+                        resultsPanel.style.display = 'block';
+                    } else {
+                        mapView.style.display = 'block';
+                        resultsPanel.style.display = 'none';
+                    }
+                });
+            });
+            
+            // SOS alert simulation
+            const sosMarker = document.querySelector('.participant-marker.sos');
+            if (sosMarker) {
+                sosMarker.addEventListener('click', function() {
+                    alert('SOS od zawodnika: Marek Kowalski (POL-123)\nLokalizacja: 54.6892° N, 18.4021° E\nWysłano pomoc ratunkową.');
+                });
+            }
+            
+            // Race control buttons
+            const raceButtons = document.querySelectorAll('.race-btn');
+            raceButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const action = this.textContent.trim();
+                    alert(`Akcja: ${action}`);
+                });
+            });
+            
+            // Results button functionality
+            const resultsBtn = document.getElementById('results-btn');
+            if (resultsBtn) {
+                resultsBtn.addEventListener('click', function() {
+                    showDebug('Switching to Results view');
+                    const mapView = document.getElementById('map-view');
+                    const resultsPanel = document.getElementById('results-panel');
+                    
+                    // Show results panel, hide map view
+                    mapView.style.display = 'none';
+                    resultsPanel.style.display = 'block';
+                    
+                    // Activate the "Wyniki" tab
+                    const filterTabs = document.querySelectorAll('.filter-tab');
+                    filterTabs.forEach((tab, index) => {
+                        tab.classList.remove('active');
+                        if (index === 4) { // "Wyniki" tab (5th tab, index 4)
+                            tab.classList.add('active');
+                        }
+                    });
+                });
+            }
+            
+            // Add debug button to the header
+            const organizerActions = document.querySelector('.organizer-actions');
+            if (organizerActions) {
+                const debugBtn = document.createElement('button');
+                debugBtn.className = 'organizer-btn';
+                debugBtn.style.backgroundColor = '#f8f9fa';
+                debugBtn.style.color = '#333';
+                debugBtn.innerHTML = '<i class="fas fa-bug"></i> Debug';
+                debugBtn.addEventListener('click', function() {
+                    document.getElementById('debug-panel').style.display = 'block';
+                    showDebug('Debug panel opened manually');
+                });
+                organizerActions.appendChild(debugBtn);
+            }
+            
+            // Show initial debug info
+            showDebug('Organizer view loaded');
+            showDebug('Checking for tracking communication module...');
+            
+            if (window.trackingCommunication) {
+                showDebug('Tracking communication module found');
+            } else {
+                showDebug('WARNING: Tracking communication module not found');
+            }
+        });
+    </script>
+</body>
+</html>
