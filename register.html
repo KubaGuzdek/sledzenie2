@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>King Of theBay - Rejestracja Zawodnika</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .registration-container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .color-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+        }
+        
+        .color-option.selected {
+            border-color: #333;
+        }
+        
+        .btn-primary {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1557b0;
+        }
+        
+        .error-message {
+            color: #f44336;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+        
+        .success-message {
+            color: #4caf50;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e8f5e9;
+            border-radius: 4px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="img/logo.png" alt="King Of theBay Logo">
+            <h1>King Of theBay</h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="index.html">Strona Główna</a></li>
+                <li><a href="register.html" class="active">Rejestracja</a></li>
+                <li><a href="organizer-view.html">Panel Organizatora</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <main>
+        <div class="registration-container">
+            <h2>Rejestracja Zawodnika</h2>
+            <p>Wypełnij poniższy formularz, aby zarejestrować się jako zawodnik w wydarzeniu King Of theBay.</p>
+            
+            <form id="registration-form">
+                <div class="form-group">
+                    <label for="name">Imię i Nazwisko</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="sail-number">Numer na Żaglu</label>
+                    <input type="text" id="sail-number" name="sailNumber" placeholder="np. POL-123" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">Telefon</label>
+                    <input type="tel" id="phone" name="phone" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="emergency-contact">Kontakt Awaryjny (osoba, numer telefonu)</label>
+                    <input type="text" id="emergency-contact" name="emergencyContact" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Kolor Śledzenia</label>
+                    <div class="color-options">
+                        <div class="color-option selected" style="background-color: #1a73e8;" data-color="#1a73e8"></div>
+                        <div class="color-option" style="background-color: #f44336;" data-color="#f44336"></div>
+                        <div class="color-option" style="background-color: #4caf50;" data-color="#4caf50"></div>
+                        <div class="color-option" style="background-color: #ff9800;" data-color="#ff9800"></div>
+                        <div class="color-option" style="background-color: #9c27b0;" data-color="#9c27b0"></div>
+                        <div class="color-option" style="background-color: #795548;" data-color="#795548"></div>
+                        <div class="color-option" style="background-color: #607d8b;" data-color="#607d8b"></div>
+                        <div class="color-option" style="background-color: #e91e63;" data-color="#e91e63"></div>
+                    </div>
+                    <input type="hidden" id="tracking-color" name="trackingColor" value="#1a73e8">
+                </div>
+                
+                <div id="error-container" class="error-message" style="display: none;"></div>
+                
+                <button type="submit" class="btn-primary">Zarejestruj się</button>
+            </form>
+            
+            <div id="success-container" class="success-message" style="display: none;">
+                <h3>Rejestracja zakończona pomyślnie!</h3>
+                <p>Twoje dane zostały zapisane. Możesz teraz przejść do aplikacji śledzenia.</p>
+                <p><a href="index.html" class="btn-primary" style="display: inline-block; margin-top: 10px; text-decoration: none;">Przejdź do aplikacji</a></p>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <p>&copy; 2025 King Of theBay. Wszelkie prawa zastrzeżone.</p>
+    </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Color selection
+            const colorOptions = document.querySelectorAll('.color-option');
+            const trackingColorInput = document.getElementById('tracking-color');
+            
+            colorOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Remove selected class from all options
+                    colorOptions.forEach(opt => opt.classList.remove('selected'));
+                    
+                    // Add selected class to clicked option
+                    this.classList.add('selected');
+                    
+                    // Update hidden input value
+                    trackingColorInput.value = this.getAttribute('data-color');
+                });
+            });
+            
+            // Form submission
+            const form = document.getElementById('registration-form');
+            const errorContainer = document.getElementById('error-container');
+            const successContainer = document.getElementById('success-container');
+            
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Validate form
+                const name = document.getElementById('name').value.trim();
+                const sailNumber = document.getElementById('sail-number').value.trim();
+                const email = document.getElementById('email').value.trim();
+                const phone = document.getElementById('phone').value.trim();
+                const emergencyContact = document.getElementById('emergency-contact').value.trim();
+                const trackingColor = trackingColorInput.value;
+                
+                if (!name || !sailNumber || !email || !phone || !emergencyContact) {
+                    errorContainer.textContent = 'Proszę wypełnić wszystkie pola formularza.';
+                    errorContainer.style.display = 'block';
+                    return;
+                }
+                
+                // Create profile data
+                const profileData = {
+                    name: name,
+                    sailNumber: sailNumber,
+                    email: email,
+                    phone: phone,
+                    emergencyContact: emergencyContact,
+                    trackingColor: trackingColor
+                };
+                
+                // Register participant
+                if (window.trackingCommunication) {
+                    window.trackingCommunication.registerParticipant(profileData, function(success, profile, errorMessage) {
+                        if (success) {
+                            // Show success message
+                            form.style.display = 'none';
+                            successContainer.style.display = 'block';
+                            
+                            // Store profile data in localStorage for convenience
+                            localStorage.setItem('userName', profile.name);
+                            localStorage.setItem('sailNumber', profile.sailNumber);
+                            localStorage.setItem('trackingColor', profile.trackingColor);
+                        } else {
+                            // Show error message
+                            errorContainer.textContent = errorMessage || 'Wystąpił błąd podczas rejestracji. Spróbuj ponownie.';
+                            errorContainer.style.display = 'block';
+                        }
+                    });
+                } else {
+                    // Fallback if tracking communication is not available
+                    // Store data in localStorage
+                    localStorage.setItem('userName', name);
+                    localStorage.setItem('sailNumber', sailNumber);
+                    localStorage.setItem('trackingColor', trackingColor);
+                    
+                    // Generate a unique ID
+                    const participantId = 'p_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+                    localStorage.setItem('participantId', participantId);
+                    
+                    // Show success message
+                    form.style.display = 'none';
+                    successContainer.style.display = 'block';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

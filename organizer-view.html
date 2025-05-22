@@ -289,12 +289,172 @@
             background-size: 20px 20px;
             pointer-events: none;
         }
+        
+        @keyframes pulse-danger {
+            0% {
+                box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(244, 67, 54, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(244, 67, 54, 0);
+            }
+        }
+        
+        /* Authentication overlay */
+        .auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .auth-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 30px;
+            width: 400px;
+            max-width: 90%;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .auth-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .auth-header img {
+            height: 60px;
+            margin-bottom: 15px;
+        }
+        
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .auth-input {
+            padding: 12px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+        }
+        
+        .auth-btn {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .auth-error {
+            color: #f44336;
+            text-align: center;
+            margin-top: 10px;
+        }
+        
+        /* Participant details panel */
+        .participant-details {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 300px;
+            max-width: calc(100% - 40px);
+            display: none;
+        }
+        
+        .participant-details-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .participant-details-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .participant-details-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .participant-details-content {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .participant-details-item {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .participant-details-label {
+            font-weight: 500;
+            color: #666;
+        }
+        
+        .participant-details-value {
+            font-weight: 600;
+        }
+        
+        .participant-details-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .participant-details-btn {
+            flex: 1;
+            padding: 8px;
+            border-radius: 4px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <a href="index.html" style="position: fixed; top: 10px; left: 10px; background-color: #1a73e8; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; z-index: 1000;">
         <i class="fas fa-user"></i> Widok Zawodnika
     </a>
+    
+    <!-- Authentication overlay -->
+    <div id="auth-overlay" class="auth-overlay">
+        <div class="auth-container">
+            <div class="auth-header">
+                <img src="img/logo.png" alt="King Of theBay Logo">
+                <h2>Panel Organizatora</h2>
+                <p>Wprowadź hasło, aby uzyskać dostęp</p>
+            </div>
+            <div class="auth-form">
+                <input type="password" id="auth-password" class="auth-input" placeholder="Hasło organizatora">
+                <button id="auth-submit" class="auth-btn">Zaloguj się</button>
+                <div id="auth-error" class="auth-error" style="display: none;">Nieprawidłowe hasło. Spróbuj ponownie.</div>
+            </div>
+        </div>
+    </div>
     
     <div class="organizer-container">
         <header class="organizer-header" style="background-color: white; color: #1a73e8; border-bottom: 1px solid rgba(0, 0, 0, 0.1);">
@@ -306,10 +466,10 @@
                 <button class="organizer-btn" style="background-color: #1a73e8; color: white;" id="results-btn">
                     <i class="fas fa-trophy"></i> Wyniki
                 </button>
-                <button class="organizer-btn" style="background-color: #1a73e8; color: white;">
+                <button class="organizer-btn" style="background-color: #1a73e8; color: white;" id="broadcast-btn">
                     <i class="fas fa-bullhorn"></i> Komunikat
                 </button>
-                <button class="organizer-btn" style="background-color: #1a73e8; color: white;">
+                <button class="organizer-btn" style="background-color: #1a73e8; color: white;" id="settings-btn">
                     <i class="fas fa-cog"></i> Ustawienia
                 </button>
             </div>
@@ -317,105 +477,18 @@
         
         <div class="organizer-content">
             <div class="participants-list">
-                <input type="text" class="search-box" placeholder="Szukaj zawodnika...">
+                <input type="text" class="search-box" placeholder="Szukaj zawodnika..." id="participant-search">
                 
                 <div class="filter-tabs">
-                    <div class="filter-tab active">Wszyscy (12)</div>
-                    <div class="filter-tab">Na trasie (8)</div>
-                    <div class="filter-tab">Oczekujący (3)</div>
-                    <div class="filter-tab">SOS <span class="notification-badge">1</span></div>
-                    <div class="filter-tab">Wyniki</div>
+                    <div class="filter-tab active" data-filter="all">Wszyscy (<span id="count-all">0</span>)</div>
+                    <div class="filter-tab" data-filter="active">Na trasie (<span id="count-active">0</span>)</div>
+                    <div class="filter-tab" data-filter="waiting">Oczekujący (<span id="count-waiting">0</span>)</div>
+                    <div class="filter-tab" data-filter="sos">SOS <span id="count-sos" class="notification-badge">0</span></div>
+                    <div class="filter-tab" data-filter="results">Wyniki</div>
                 </div>
                 
-                <div class="participant-item sos">
-                    <div class="participant-header">
-                        <div class="participant-name">Marek Kowalski</div>
-                        <div class="participant-sail">POL-123</div>
-                    </div>
-                    <div class="participant-status">
-                        <div class="status-indicator">
-                            <i class="fas fa-exclamation-triangle status-bad"></i> SOS
-                        </div>
-                        <div>3.2 km</div>
-                    </div>
-                </div>
-                
-                <div class="participant-item active">
-                    <div class="participant-header">
-                        <div class="participant-name">Anna Nowak</div>
-                        <div class="participant-sail">POL-456</div>
-                    </div>
-                    <div class="participant-status">
-                        <div class="status-indicator">
-                            <i class="fas fa-satellite-dish status-good"></i> GPS OK
-                        </div>
-                        <div>5.7 km</div>
-                    </div>
-                </div>
-                
-                <div class="participant-item">
-                    <div class="participant-header">
-                        <div class="participant-name">Piotr Wiśniewski</div>
-                        <div class="participant-sail">POL-789</div>
-                    </div>
-                    <div class="participant-status">
-                        <div class="status-indicator">
-                            <i class="fas fa-satellite-dish status-good"></i> GPS OK
-                        </div>
-                        <div>4.1 km</div>
-                    </div>
-                </div>
-                
-                <div class="participant-item">
-                    <div class="participant-header">
-                        <div class="participant-name">Katarzyna Dąbrowska</div>
-                        <div class="participant-sail">POL-234</div>
-                    </div>
-                    <div class="participant-status">
-                        <div class="status-indicator">
-                            <i class="fas fa-satellite-dish status-warning"></i> GPS Słaby
-                        </div>
-                        <div>2.8 km</div>
-                    </div>
-                </div>
-                
-                <div class="participant-item">
-                    <div class="participant-header">
-                        <div class="participant-name">Tomasz Lewandowski</div>
-                        <div class="participant-sail">POL-567</div>
-                    </div>
-                    <div class="participant-status">
-                        <div class="status-indicator">
-                            <i class="fas fa-satellite-dish status-good"></i> GPS OK
-                        </div>
-                        <div>6.3 km</div>
-                    </div>
-                </div>
-                
-                <div class="participant-item">
-                    <div class="participant-header">
-                        <div class="participant-name">Magdalena Zielińska</div>
-                        <div class="participant-sail">POL-890</div>
-                    </div>
-                    <div class="participant-status">
-                        <div class="status-indicator">
-                            <i class="fas fa-flag-checkered"></i> Oczekuje
-                        </div>
-                        <div>0.0 km</div>
-                    </div>
-                </div>
-                
-                <div class="participant-item">
-                    <div class="participant-header">
-                        <div class="participant-name">Krzysztof Szymański</div>
-                        <div class="participant-sail">POL-345</div>
-                    </div>
-                    <div class="participant-status">
-                        <div class="status-indicator">
-                            <i class="fas fa-flag-checkered"></i> Oczekuje
-                        </div>
-                        <div>0.0 km</div>
-                    </div>
+                <div id="participants-container">
+                    <!-- Participants will be dynamically added here -->
                 </div>
             </div>
             
@@ -484,84 +557,8 @@
                         <div style="flex: 0 0 100px;">Akcje</div>
                     </div>
                     
-                    <div style="display: flex; padding: 12px 15px; border-bottom: 1px solid #eee; align-items: center;">
-                        <div style="flex: 0 0 40px; font-weight: 700;">1</div>
-                        <div style="flex: 1;">Anna Nowak (POL-456)</div>
-                        <div style="flex: 0 0 120px;">
-                            <input type="text" value="38:12" style="width: 80px; padding: 5px; border-radius: 4px; border: 1px solid #ddd;">
-                        </div>
-                        <div style="flex: 0 0 100px;">
-                            <button style="background-color: #1a73e8; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
-                                <i class="fas fa-save"></i>
-                            </button>
-                            <button style="background-color: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-left: 5px;">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div style="display: flex; padding: 12px 15px; border-bottom: 1px solid #eee; align-items: center;">
-                        <div style="flex: 0 0 40px; font-weight: 700;">2</div>
-                        <div style="flex: 1;">Piotr Wiśniewski (POL-789)</div>
-                        <div style="flex: 0 0 120px;">
-                            <input type="text" value="39:45" style="width: 80px; padding: 5px; border-radius: 4px; border: 1px solid #ddd;">
-                        </div>
-                        <div style="flex: 0 0 100px;">
-                            <button style="background-color: #1a73e8; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
-                                <i class="fas fa-save"></i>
-                            </button>
-                            <button style="background-color: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-left: 5px;">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div style="display: flex; padding: 12px 15px; border-bottom: 1px solid #eee; align-items: center;">
-                        <div style="flex: 0 0 40px; font-weight: 700;">3</div>
-                        <div style="flex: 1;">Jan Kowalski (POL-123)</div>
-                        <div style="flex: 0 0 120px;">
-                            <input type="text" value="41:20" style="width: 80px; padding: 5px; border-radius: 4px; border: 1px solid #ddd;">
-                        </div>
-                        <div style="flex: 0 0 100px;">
-                            <button style="background-color: #1a73e8; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
-                                <i class="fas fa-save"></i>
-                            </button>
-                            <button style="background-color: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-left: 5px;">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div style="display: flex; padding: 12px 15px; border-bottom: 1px solid #eee; align-items: center;">
-                        <div style="flex: 0 0 40px; font-weight: 700;">4</div>
-                        <div style="flex: 1;">Tomasz Lewandowski (POL-567)</div>
-                        <div style="flex: 0 0 120px;">
-                            <input type="text" value="42:08" style="width: 80px; padding: 5px; border-radius: 4px; border: 1px solid #ddd;">
-                        </div>
-                        <div style="flex: 0 0 100px;">
-                            <button style="background-color: #1a73e8; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
-                                <i class="fas fa-save"></i>
-                            </button>
-                            <button style="background-color: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-left: 5px;">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div style="display: flex; padding: 12px 15px; align-items: center;">
-                        <div style="flex: 0 0 40px; font-weight: 700;">5</div>
-                        <div style="flex: 1;">Katarzyna Dąbrowska (POL-234)</div>
-                        <div style="flex: 0 0 120px;">
-                            <input type="text" value="43:51" style="width: 80px; padding: 5px; border-radius: 4px; border: 1px solid #ddd;">
-                        </div>
-                        <div style="flex: 0 0 100px;">
-                            <button style="background-color: #1a73e8; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
-                                <i class="fas fa-save"></i>
-                            </button>
-                            <button style="background-color: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-left: 5px;">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
+                    <div id="results-table">
+                        <!-- Results will be dynamically added here -->
                     </div>
                 </div>
                 
@@ -580,56 +577,86 @@
             
             <!-- Map view (default) -->
             <div id="map-view" class="map-container">
-                <div class="organizer-map">
+                <div class="organizer-map" id="map">
                     <div class="map-grid"></div>
-                    
-                    <!-- Participant markers on the map -->
-                    <div class="participant-marker" style="top: 30%; left: 40%; background-color: #1a73e8;">
-                        <div class="participant-tooltip">Anna Nowak (POL-456)</div>
-                    </div>
-                    
-                    <div class="participant-marker" style="top: 45%; left: 55%; background-color: #4caf50;">
-                        <div class="participant-tooltip">Piotr Wiśniewski (POL-789)</div>
-                    </div>
-                    
-                    <div class="participant-marker" style="top: 60%; left: 35%; background-color: #ff9800;">
-                        <div class="participant-tooltip">Katarzyna Dąbrowska (POL-234)</div>
-                    </div>
-                    
-                    <div class="participant-marker" style="top: 25%; left: 65%; background-color: #9c27b0;">
-                        <div class="participant-tooltip">Tomasz Lewandowski (POL-567)</div>
-                    </div>
-                    
-                    <div class="participant-marker sos" style="top: 50%; left: 25%; background-color: #f44336;">
-                        <div class="participant-tooltip">Marek Kowalski (POL-123) - SOS!</div>
-                    </div>
+                    <!-- Participant markers will be dynamically added here -->
                 </div>
                 
                 <div class="map-controls">
-                    <button class="map-control-btn">
+                    <button class="map-control-btn" id="zoom-in">
                         <i class="fas fa-plus"></i>
                     </button>
-                    <button class="map-control-btn">
+                    <button class="map-control-btn" id="zoom-out">
                         <i class="fas fa-minus"></i>
                     </button>
-                    <button class="map-control-btn">
+                    <button class="map-control-btn" id="center-map">
                         <i class="fas fa-location-arrow"></i>
                     </button>
-                    <button class="map-control-btn">
+                    <button class="map-control-btn" id="toggle-layers">
                         <i class="fas fa-layer-group"></i>
                     </button>
                 </div>
                 
                 <div class="race-controls">
-                    <button class="race-btn race-btn-primary">
+                    <button class="race-btn race-btn-primary" id="start-race">
                         <i class="fas fa-flag-checkered"></i> Start wyścigu
                     </button>
-                    <button class="race-btn race-btn-warning">
+                    <button class="race-btn race-btn-warning" id="pause-race">
                         <i class="fas fa-pause-circle"></i> Wstrzymaj
                     </button>
-                    <button class="race-btn race-btn-danger">
+                    <button class="race-btn race-btn-danger" id="end-race">
                         <i class="fas fa-stop-circle"></i> Zakończ wyścig
                     </button>
+                </div>
+                
+                <!-- Participant details panel -->
+                <div class="participant-details" id="participant-details">
+                    <div class="participant-details-header">
+                        <div class="participant-details-title">Szczegóły zawodnika</div>
+                        <button class="participant-details-close" id="close-details">&times;</button>
+                    </div>
+                    <div class="participant-details-content">
+                        <div class="participant-details-item">
+                            <div class="participant-details-label">Imię i nazwisko:</div>
+                            <div class="participant-details-value" id="detail-name">-</div>
+                        </div>
+                        <div class="participant-details-item">
+                            <div class="participant-details-label">Numer na żaglu:</div>
+                            <div class="participant-details-value" id="detail-sail">-</div>
+                        </div>
+                        <div class="participant-details-item">
+                            <div class="participant-details-label">Status:</div>
+                            <div class="participant-details-value" id="detail-status">-</div>
+                        </div>
+                        <div class="participant-details-item">
+                            <div class="participant-details-label">Dystans:</div>
+                            <div class="participant-details-value" id="detail-distance">-</div>
+                        </div>
+                        <div class="participant-details-item">
+                            <div class="participant-details-label">Prędkość:</div>
+                            <div class="participant-details-value" id="detail-speed">-</div>
+                        </div>
+                        <div class="participant-details-item">
+                            <div class="participant-details-label">Ostatnia aktualizacja:</div>
+                            <div class="participant-details-value" id="detail-last-update">-</div>
+                        </div>
+                        <div class="participant-details-item">
+                            <div class="participant-details-label">Telefon:</div>
+                            <div class="participant-details-value" id="detail-phone">-</div>
+                        </div>
+                        <div class="participant-details-item">
+                            <div class="participant-details-label">Kontakt awaryjny:</div>
+                            <div class="participant-details-value" id="detail-emergency">-</div>
+                        </div>
+                    </div>
+                    <div class="participant-details-actions">
+                        <button class="participant-details-btn" style="background-color: #1a73e8; color: white;" id="track-participant">
+                            <i class="fas fa-location-arrow"></i> Śledź
+                        </button>
+                        <button class="participant-details-btn" style="background-color: #f44336; color: white;" id="contact-participant">
+                            <i class="fas fa-phone"></i> Kontakt
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -669,87 +696,553 @@
             debugContent.scrollTop = debugContent.scrollHeight;
         }
         
-        // Simple demo functionality
+        // Organizer view functionality
         document.addEventListener('DOMContentLoaded', function() {
-            // Make participant items selectable
-            const participantItems = document.querySelectorAll('.participant-item');
-            participantItems.forEach(item => {
-                item.addEventListener('click', function() {
-                    // Remove active class from all items
-                    participantItems.forEach(i => {
-                        if (!i.classList.contains('sos')) {
-                            i.classList.remove('active');
+            // Authentication
+            const authOverlay = document.getElementById('auth-overlay');
+            const authSubmit = document.getElementById('auth-submit');
+            const authPassword = document.getElementById('auth-password');
+            const authError = document.getElementById('auth-error');
+            
+            // Handle authentication
+            authSubmit.addEventListener('click', function() {
+                const password = authPassword.value;
+                
+                if (window.trackingCommunication) {
+                    window.trackingCommunication.authenticateOrganizer(password);
+                    
+                    // Set authentication callback
+                    window.trackingCommunication.setAuthenticationCallback(function(success, role) {
+                        if (success && role === 'organizer') {
+                            authOverlay.style.display = 'none';
+                            showDebug('Authentication successful');
+                            initializeOrganizerView();
+                        } else {
+                            authError.style.display = 'block';
+                            showDebug('Authentication failed');
                         }
                     });
-                    // Add active class to clicked item
-                    if (!this.classList.contains('sos')) {
-                        this.classList.add('active');
-                    }
-                });
+                } else {
+                    // For demo purposes, allow any password
+                    authOverlay.style.display = 'none';
+                    showDebug('Authentication bypassed (tracking communication not available)');
+                    initializeOrganizerView();
+                }
             });
             
-            // Make filter tabs selectable
-            const filterTabs = document.querySelectorAll('.filter-tab');
-            filterTabs.forEach((tab, index) => {
-                tab.addEventListener('click', function() {
-                    filterTabs.forEach(t => t.classList.remove('active'));
-                    this.classList.add('active');
+            // Allow Enter key to submit
+            authPassword.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    authSubmit.click();
+                }
+            });
+            
+            // Initialize organizer view after authentication
+            function initializeOrganizerView() {
+                // Set up participant list update callback
+                if (window.trackingCommunication) {
+                    window.trackingCommunication.setParticipantListUpdateCallback(updateParticipantsList);
+                }
+                
+                // Start listening for updates
+                if (window.trackingCommunication) {
+                    window.trackingCommunication.startListening();
+                }
+                
+                // Initialize organizer tracking
+                if (window.organizerTracking) {
+                    window.organizerTracking.initialize();
+                } else {
+                    showDebug('WARNING: Organizer tracking module not found');
+                    // Initialize demo data
+                    initializeDemoData();
+                }
+                
+                // Set up event listeners
+                setupEventListeners();
+                
+                showDebug('Organizer view initialized');
+            }
+            
+            // Update participants list
+            function updateParticipantsList(participants) {
+                showDebug(`Updating participants list: ${participants.length} participants`);
+                
+                const container = document.getElementById('participants-container');
+                const searchInput = document.getElementById('participant-search');
+                const searchTerm = searchInput.value.toLowerCase();
+                
+                // Clear container
+                container.innerHTML = '';
+                
+                // Update counters
+                let countAll = 0;
+                let countActive = 0;
+                let countWaiting = 0;
+                let countSOS = 0;
+                
+                // Filter and sort participants
+                const filteredParticipants = participants.filter(p => {
+                    // Apply search filter
+                    if (searchTerm && !p.name.toLowerCase().includes(searchTerm) && 
+                        !p.sailNumber.toLowerCase().includes(searchTerm)) {
+                        return false;
+                    }
                     
-                    // Toggle between map view and results panel when "Wyniki" tab is clicked
-                    const mapView = document.getElementById('map-view');
-                    const resultsPanel = document.getElementById('results-panel');
+                    // Count by status
+                    countAll++;
                     
-                    if (index === 4) { // "Wyniki" tab (5th tab, index 4)
-                        mapView.style.display = 'none';
-                        resultsPanel.style.display = 'block';
+                    if (p.status === 'sos') {
+                        countSOS++;
+                    } else if (p.status === 'active') {
+                        countActive++;
                     } else {
-                        mapView.style.display = 'block';
-                        resultsPanel.style.display = 'none';
+                        countWaiting++;
+                    }
+                    
+                    return true;
+                }).sort((a, b) => {
+                    // Sort by status (SOS first)
+                    if (a.status === 'sos' && b.status !== 'sos') return -1;
+                    if (a.status !== 'sos' && b.status === 'sos') return 1;
+                    
+                    // Then by name
+                    return a.name.localeCompare(b.name);
+                });
+                
+                // Update counters in UI
+                document.getElementById('count-all').textContent = countAll;
+                document.getElementById('count-active').textContent = countActive;
+                document.getElementById('count-waiting').textContent = countWaiting;
+                document.getElementById('count-sos').textContent = countSOS;
+                
+                // Create participant items
+                filteredParticipants.forEach(participant => {
+                    const item = createParticipantItem(participant);
+                    container.appendChild(item);
+                });
+                
+                // Update results table
+                updateResultsTable(participants);
+            }
+            
+            // Create participant item
+            function createParticipantItem(participant) {
+                const item = document.createElement('div');
+                item.className = 'participant-item';
+                item.dataset.id = participant.id;
+                
+                if (participant.status === 'sos') {
+                    item.classList.add('sos');
+                }
+                
+                let statusIcon = 'fa-satellite-dish';
+                let statusText = 'GPS OK';
+                let statusClass = 'status-good';
+                
+                if (participant.status === 'sos') {
+                    statusIcon = 'fa-exclamation-triangle';
+                    statusText = 'SOS';
+                    statusClass = 'status-bad';
+                } else if (!participant.position) {
+                    statusIcon = 'fa-flag-checkered';
+                    statusText = 'Oczekuje';
+                    statusClass = '';
+                }
+                
+                const distance = participant.distance ? `${participant.distance.toFixed(1)} km` : '0.0 km';
+                
+                item.innerHTML = `
+                    <div class="participant-header">
+                        <div class="participant-name">${participant.name}</div>
+                        <div class="participant-sail">${participant.sailNumber}</div>
+                    </div>
+                    <div class="participant-status">
+                        <div class="status-indicator">
+                            <i class="fas ${statusIcon} ${statusClass}"></i> ${statusText}
+                        </div>
+                        <div>${distance}</div>
+                    </div>
+                `;
+                
+                // Add click event
+                item.addEventListener('click', function() {
+                    showParticipantDetails(participant);
+                });
+                
+                return item;
+            }
+            
+            // Show participant details
+            function showParticipantDetails(participant) {
+                const detailsPanel = document.getElementById('participant-details');
+                
+                // Update details
+                document.getElementById('detail-name').textContent = participant.name;
+                document.getElementById('detail-sail').textContent = participant.sailNumber;
+                document.getElementById('detail-status').textContent = participant.status === 'sos' ? 'SOS' : 
+                    (participant.position ? 'Aktywny' : 'Oczekuje');
+                document.getElementById('detail-distance').textContent = participant.distance ? 
+                    `${participant.distance.toFixed(1)} km` : '0.0 km';
+                document.getElementById('detail-speed').textContent = participant.speed ? 
+                    `${participant.speed.toFixed(1)} km/h` : '0.0 km/h';
+                document.getElementById('detail-last-update').textContent = participant.lastUpdate ? 
+                    new Date(participant.lastUpdate).toLocaleTimeString() : '-';
+                document.getElementById('detail-phone').textContent = participant.phone || '-';
+                document.getElementById('detail-emergency').textContent = participant.emergencyContact || '-';
+                
+                // Show panel
+                detailsPanel.style.display = 'block';
+                
+                // Highlight participant in list
+                const participantItems = document.querySelectorAll('.participant-item');
+                participantItems.forEach(item => {
+                    if (!item.classList.contains('sos')) {
+                        item.classList.remove('active');
+                    }
+                    if (item.dataset.id === participant.id && !item.classList.contains('sos')) {
+                        item.classList.add('active');
                     }
                 });
-            });
+                
+                // Center map on participant
+                if (window.organizerTracking && participant.position) {
+                    window.organizerTracking.centerOnParticipant(participant.id);
+                }
+            }
             
-            // SOS alert simulation
-            const sosMarker = document.querySelector('.participant-marker.sos');
-            if (sosMarker) {
-                sosMarker.addEventListener('click', function() {
-                    alert('SOS od zawodnika: Marek Kowalski (POL-123)\nLokalizacja: 54.6892° N, 18.4021° E\nWysłano pomoc ratunkową.');
+            // Update results table
+            function updateResultsTable(participants) {
+                const resultsTable = document.getElementById('results-table');
+                
+                // Clear table
+                resultsTable.innerHTML = '';
+                
+                // Sort participants by name
+                const sortedParticipants = [...participants].sort((a, b) => a.name.localeCompare(b.name));
+                
+                // Create result rows
+                sortedParticipants.forEach((participant, index) => {
+                    const row = document.createElement('div');
+                    row.style.display = 'flex';
+                    row.style.padding = '12px 15px';
+                    row.style.borderBottom = '1px solid #eee';
+                    row.style.alignItems = 'center';
+                    
+                    row.innerHTML = `
+                        <div style="flex: 0 0 40px; font-weight: 700;">${index + 1}</div>
+                        <div style="flex: 1;">${participant.name} (${participant.sailNumber})</div>
+                        <div style="flex: 0 0 120px;">
+                            <input type="text" value="" style="width: 80px; padding: 5px; border-radius: 4px; border: 1px solid #ddd;">
+                        </div>
+                        <div style="flex: 0 0 100px;">
+                            <button style="background-color: #1a73e8; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+                                <i class="fas fa-save"></i>
+                            </button>
+                            <button style="background-color: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-left: 5px;">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    
+                    resultsTable.appendChild(row);
                 });
             }
             
-            // Race control buttons
-            const raceButtons = document.querySelectorAll('.race-btn');
-            raceButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const action = this.textContent.trim();
-                    alert(`Akcja: ${action}`);
+            // Set up event listeners
+            function setupEventListeners() {
+                // Close participant details
+                document.getElementById('close-details').addEventListener('click', function() {
+                    document.getElementById('participant-details').style.display = 'none';
                 });
-            });
-            
-            // Results button functionality
-            const resultsBtn = document.getElementById('results-btn');
-            if (resultsBtn) {
-                resultsBtn.addEventListener('click', function() {
-                    showDebug('Switching to Results view');
+                
+                // Filter tabs
+                const filterTabs = document.querySelectorAll('.filter-tab');
+                filterTabs.forEach((tab, index) => {
+                    tab.addEventListener('click', function() {
+                        filterTabs.forEach(t => t.classList.remove('active'));
+                        this.classList.add('active');
+                        
+                        const filter = this.getAttribute('data-filter');
+                        
+                        // Toggle between map view and results panel when "results" tab is clicked
+                        const mapView = document.getElementById('map-view');
+                        const resultsPanel = document.getElementById('results-panel');
+                        
+                        if (filter === 'results') {
+                            mapView.style.display = 'none';
+                            resultsPanel.style.display = 'block';
+                        } else {
+                            mapView.style.display = 'block';
+                            resultsPanel.style.display = 'none';
+                            
+                            // Apply filter to participants list
+                            filterParticipants(filter);
+                        }
+                    });
+                });
+                
+                // Search input
+                document.getElementById('participant-search').addEventListener('input', function() {
+                    const activeTab = document.querySelector('.filter-tab.active');
+                    const filter = activeTab ? activeTab.getAttribute('data-filter') : 'all';
+                    filterParticipants(filter);
+                });
+                
+                // Results button
+                document.getElementById('results-btn').addEventListener('click', function() {
                     const mapView = document.getElementById('map-view');
                     const resultsPanel = document.getElementById('results-panel');
                     
-                    // Show results panel, hide map view
                     mapView.style.display = 'none';
                     resultsPanel.style.display = 'block';
                     
-                    // Activate the "Wyniki" tab
+                    // Activate results tab
                     const filterTabs = document.querySelectorAll('.filter-tab');
-                    filterTabs.forEach((tab, index) => {
+                    filterTabs.forEach(tab => {
                         tab.classList.remove('active');
-                        if (index === 4) { // "Wyniki" tab (5th tab, index 4)
+                        if (tab.getAttribute('data-filter') === 'results') {
                             tab.classList.add('active');
                         }
                     });
                 });
+                
+                // Map control buttons
+                document.getElementById('zoom-in').addEventListener('click', function() {
+                    if (window.organizerTracking) {
+                        window.organizerTracking.zoomIn();
+                    }
+                });
+                
+                document.getElementById('zoom-out').addEventListener('click', function() {
+                    if (window.organizerTracking) {
+                        window.organizerTracking.zoomOut();
+                    }
+                });
+                
+                document.getElementById('center-map').addEventListener('click', function() {
+                    if (window.organizerTracking) {
+                        window.organizerTracking.centerMap();
+                    }
+                });
+                
+                document.getElementById('toggle-layers').addEventListener('click', function() {
+                    if (window.organizerTracking) {
+                        window.organizerTracking.toggleLayers();
+                    }
+                });
+                
+                // Race control buttons
+                document.getElementById('start-race').addEventListener('click', function() {
+                    showDebug('Race started');
+                    alert('Wyścig rozpoczęty!');
+                });
+                
+                document.getElementById('pause-race').addEventListener('click', function() {
+                    showDebug('Race paused');
+                    alert('Wyścig wstrzymany!');
+                });
+                
+                document.getElementById('end-race').addEventListener('click', function() {
+                    showDebug('Race ended');
+                    alert('Wyścig zakończony!');
+                });
+                
+                // Participant details buttons
+                document.getElementById('track-participant').addEventListener('click', function() {
+                    showDebug('Tracking participant');
+                    alert('Śledzenie zawodnika włączone');
+                });
+                
+                document.getElementById('contact-participant').addEventListener('click', function() {
+                    const phone = document.getElementById('detail-phone').textContent;
+                    if (phone && phone !== '-') {
+                        showDebug(`Contacting participant: ${phone}`);
+                        alert(`Dzwonię do zawodnika: ${phone}`);
+                    } else {
+                        alert('Brak numeru telefonu do zawodnika');
+                    }
+                });
             }
             
-            // Add debug button to the header
+            // Filter participants
+            function filterParticipants(filter) {
+                const searchTerm = document.getElementById('participant-search').value.toLowerCase();
+                const items = document.querySelectorAll('.participant-item');
+                
+                items.forEach(item => {
+                    const name = item.querySelector('.participant-name').textContent.toLowerCase();
+                    const sail = item.querySelector('.participant-sail').textContent.toLowerCase();
+                    const isSOS = item.classList.contains('sos');
+                    const statusText = item.querySelector('.status-indicator').textContent.trim().toLowerCase();
+                    const isActive = statusText.includes('gps');
+                    const isWaiting = statusText.includes('oczekuje');
+                    
+                    // Apply search filter
+                    const matchesSearch = !searchTerm || 
+                        name.includes(searchTerm) || 
+                        sail.includes(searchTerm);
+                    
+                    // Apply status filter
+                    let matchesFilter = true;
+                    if (filter === 'sos') {
+                        matchesFilter = isSOS;
+                    } else if (filter === 'active') {
+                        matchesFilter = isActive;
+                    } else if (filter === 'waiting') {
+                        matchesFilter = isWaiting;
+                    }
+                    
+                    // Show/hide item
+                    item.style.display = matchesSearch && matchesFilter ? 'block' : 'none';
+                });
+            }
+            
+            // Initialize demo data if needed
+            function initializeDemoData() {
+                showDebug('Initializing demo data');
+                
+                const demoParticipants = [
+                    {
+                        id: 'p1',
+                        name: 'Marek Kowalski',
+                        sailNumber: 'POL-123',
+                        status: 'sos',
+                        position: { lat: 54.6892, lng: 18.4021 },
+                        distance: 3.2,
+                        speed: 0,
+                        lastUpdate: new Date().toISOString(),
+                        phone: '+48 123 456 789',
+                        emergencyContact: 'Anna Kowalska +48 987 654 321',
+                        trackingColor: '#f44336'
+                    },
+                    {
+                        id: 'p2',
+                        name: 'Anna Nowak',
+                        sailNumber: 'POL-456',
+                        status: 'active',
+                        position: { lat: 54.7012, lng: 18.4321 },
+                        distance: 5.7,
+                        speed: 12.3,
+                        lastUpdate: new Date().toISOString(),
+                        phone: '+48 234 567 890',
+                        emergencyContact: 'Piotr Nowak +48 876 543 210',
+                        trackingColor: '#1a73e8'
+                    },
+                    {
+                        id: 'p3',
+                        name: 'Piotr Wiśniewski',
+                        sailNumber: 'POL-789',
+                        status: 'active',
+                        position: { lat: 54.6954, lng: 18.4123 },
+                        distance: 4.1,
+                        speed: 10.8,
+                        lastUpdate: new Date().toISOString(),
+                        phone: '+48 345 678 901',
+                        emergencyContact: 'Marta Wiśniewska +48 765 432 109',
+                        trackingColor: '#4caf50'
+                    },
+                    {
+                        id: 'p4',
+                        name: 'Katarzyna Dąbrowska',
+                        sailNumber: 'POL-234',
+                        status: 'active',
+                        position: { lat: 54.6876, lng: 18.3987 },
+                        distance: 2.8,
+                        speed: 8.5,
+                        lastUpdate: new Date().toISOString(),
+                        phone: '+48 456 789 012',
+                        emergencyContact: 'Tomasz Dąbrowski +48 654 321 098',
+                        trackingColor: '#ff9800'
+                    },
+                    {
+                        id: 'p5',
+                        name: 'Tomasz Lewandowski',
+                        sailNumber: 'POL-567',
+                        status: 'active',
+                        position: { lat: 54.7045, lng: 18.4234 },
+                        distance: 6.3,
+                        speed: 14.2,
+                        lastUpdate: new Date().toISOString(),
+                        phone: '+48 567 890 123',
+                        emergencyContact: 'Agnieszka Lewandowska +48 543 210 987',
+                        trackingColor: '#9c27b0'
+                    },
+                    {
+                        id: 'p6',
+                        name: 'Magdalena Zielińska',
+                        sailNumber: 'POL-890',
+                        status: 'waiting',
+                        position: null,
+                        distance: 0,
+                        speed: 0,
+                        lastUpdate: null,
+                        phone: '+48 678 901 234',
+                        emergencyContact: 'Krzysztof Zieliński +48 432 109 876',
+                        trackingColor: '#795548'
+                    },
+                    {
+                        id: 'p7',
+                        name: 'Krzysztof Szymański',
+                        sailNumber: 'POL-345',
+                        status: 'waiting',
+                        position: null,
+                        distance: 0,
+                        speed: 0,
+                        lastUpdate: null,
+                        phone: '+48 789 012 345',
+                        emergencyContact: 'Joanna Szymańska +48 321 098 765',
+                        trackingColor: '#607d8b'
+                    }
+                ];
+                
+                // Update participants list
+                updateParticipantsList(demoParticipants);
+                
+                // Create demo markers
+                demoParticipants.forEach(participant => {
+                    if (participant.position) {
+                        createDemoMarker(participant);
+                    }
+                });
+            }
+            
+            // Create demo marker
+            function createDemoMarker(participant) {
+                const map = document.getElementById('map');
+                
+                const marker = document.createElement('div');
+                marker.className = 'participant-marker';
+                if (participant.status === 'sos') {
+                    marker.classList.add('sos');
+                }
+                
+                marker.style.backgroundColor = participant.trackingColor;
+                
+                // Position randomly on the map
+                const top = 20 + Math.random() * 60; // 20% to 80% from top
+                const left = 20 + Math.random() * 60; // 20% to 80% from left
+                
+                marker.style.top = `${top}%`;
+                marker.style.left = `${left}%`;
+                
+                const tooltip = document.createElement('div');
+                tooltip.className = 'participant-tooltip';
+                tooltip.textContent = `${participant.name} (${participant.sailNumber})`;
+                if (participant.status === 'sos') {
+                    tooltip.textContent += ' - SOS!';
+                }
+                
+                marker.appendChild(tooltip);
+                map.appendChild(marker);
+                
+                // Add click event
+                marker.addEventListener('click', function() {
+                    showParticipantDetails(participant);
+                });
+            }
+            
+            // Show debug panel button
             const organizerActions = document.querySelector('.organizer-actions');
             if (organizerActions) {
                 const debugBtn = document.createElement('button');
@@ -774,6 +1267,3 @@
                 showDebug('WARNING: Tracking communication module not found');
             }
         });
-    </script>
-</body>
-</html>

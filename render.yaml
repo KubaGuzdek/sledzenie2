@@ -1,13 +1,20 @@
+# Render.com configuration file
+# This file defines how the application should be deployed on Render.com
+# WebSockets are supported by default on Render.com web services
+
 services:
   - type: web
     name: king-of-the-bay
     env: node
+    plan: starter
     buildCommand: npm install
     startCommand: npm start
+    healthCheckPath: /
     envVars:
-      - key: PORT
-        value: 10000
       - key: NODE_ENV
         value: production
-    healthCheckPath: /
+      - key: PORT
+        value: 10000
+      - key: ORGANIZER_PASSWORD
+        sync: false # This will prompt for a value during deployment
     autoDeploy: true

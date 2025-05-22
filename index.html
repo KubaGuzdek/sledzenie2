@@ -13,6 +13,9 @@
         <a href="organizer-view.html" style="position: fixed; top: 10px; right: 10px; background-color: #1a73e8; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; z-index: 1000;">
             <i class="fas fa-users-cog"></i> Panel Organizatora
         </a>
+        <a href="register.html" style="position: fixed; top: 10px; right: 150px; background-color: #4caf50; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; z-index: 1000;">
+            <i class="fas fa-user-plus"></i> Rejestracja
+        </a>
         <!-- Main container that holds all screens -->
         <div id="app" class="mobile-container">
             <!-- Only one screen will be displayed at a time -->
@@ -184,6 +187,102 @@
                 </nav>
             </div>
             
+            <!-- PROFILE SCREEN -->
+            <div id="profile-screen" class="screen">
+                <header class="app-header" style="background-color: white; color: #1a73e8; border-bottom: 1px solid rgba(0, 0, 0, 0.1);">
+                    <div style="display: flex; align-items: center; padding: 8px 15px; border-radius: 8px;">
+                        <img src="img/logo.png" alt="Logo zawodów" class="app-logo" style="height: 60px; margin-right: 10px;">
+                        <h1 class="app-title">Profil zawodnika</h1>
+                    </div>
+                </header>
+                
+                <div class="content">
+                    <div id="profile-not-authenticated" style="text-align: center; padding: 20px;">
+                        <i class="fas fa-user-circle" style="font-size: 64px; color: #ccc; margin-bottom: 20px;"></i>
+                        <h2>Nie jesteś zalogowany</h2>
+                        <p>Aby korzystać z aplikacji, musisz się zarejestrować jako zawodnik.</p>
+                        <a href="register.html" class="btn btn-primary" style="text-decoration: none; margin-top: 20px;">
+                            <i class="fas fa-user-plus"></i> Zarejestruj się
+                        </a>
+                    </div>
+                    
+                    <div id="profile-authenticated" style="display: none;">
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <div style="width: 100px; height: 100px; border-radius: 50%; background-color: #1a73e8; margin: 0 auto; display: flex; justify-content: center; align-items: center; color: white; font-size: 48px;" id="profile-avatar">
+                                JK
+                            </div>
+                            <h2 id="profile-name" style="margin-top: 10px;">Jan Kowalski</h2>
+                            <div id="profile-sail" style="background-color: #1a73e8; color: white; padding: 5px 10px; border-radius: 4px; display: inline-block; margin-top: 5px;">POL-123</div>
+                        </div>
+                        
+                        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                            <h3 style="margin-top: 0; color: #333; font-size: 16px;">Dane kontaktowe</h3>
+                            <div style="display: flex; margin-bottom: 10px;">
+                                <div style="width: 30px; color: #666;"><i class="fas fa-envelope"></i></div>
+                                <div id="profile-email">jan.kowalski@example.com</div>
+                            </div>
+                            <div style="display: flex; margin-bottom: 10px;">
+                                <div style="width: 30px; color: #666;"><i class="fas fa-phone"></i></div>
+                                <div id="profile-phone">+48 123 456 789</div>
+                            </div>
+                            <div style="display: flex;">
+                                <div style="width: 30px; color: #666;"><i class="fas fa-exclamation-circle"></i></div>
+                                <div id="profile-emergency">Anna Kowalska +48 987 654 321</div>
+                            </div>
+                        </div>
+                        
+                        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                            <h3 style="margin-top: 0; color: #333; font-size: 16px;">Statystyki</h3>
+                            <div style="display: flex; justify-content: space-between; text-align: center;">
+                                <div>
+                                    <div style="font-size: 24px; font-weight: 700; color: #1a73e8;">3</div>
+                                    <div style="color: #666; font-size: 14px;">Wyścigi</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 24px; font-weight: 700; color: #1a73e8;">2</div>
+                                    <div style="color: #666; font-size: 14px;">Podium</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 24px; font-weight: 700; color: #1a73e8;">12.4</div>
+                                    <div style="color: #666; font-size: 14px;">km</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="showScreen('settings-screen')">
+                            <i class="fas fa-edit"></i> Edytuj profil
+                        </button>
+                        
+                        <button class="btn" style="background-color: #f44336; color: white; margin-top: 10px;" id="logout-btn">
+                            <i class="fas fa-sign-out-alt"></i> Wyloguj się
+                        </button>
+                    </div>
+                </div>
+                
+                <nav class="nav-bar">
+                    <a href="#" class="nav-item" onclick="showScreen('home-screen')">
+                        <i class="fas fa-home nav-icon"></i>
+                        <span>Start</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="showScreen('map-screen')">
+                        <i class="fas fa-map-marked-alt nav-icon"></i>
+                        <span>Mapa</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="showScreen('ready-screen')">
+                        <i class="fas fa-flag-checkered nav-icon"></i>
+                        <span>Start</span>
+                    </a>
+                    <a href="#" class="nav-item" onclick="showScreen('results-screen')">
+                        <i class="fas fa-trophy nav-icon"></i>
+                        <span>Wyniki</span>
+                    </a>
+                    <a href="#" class="nav-item active" onclick="showScreen('profile-screen')">
+                        <i class="fas fa-user nav-icon"></i>
+                        <span>Profil</span>
+                    </a>
+                </nav>
+            </div>
+            
             <!-- SETTINGS SCREEN -->
             <div id="settings-screen" class="screen">
                 <header class="app-header" style="background-color: white; color: #1a73e8; border-bottom: 1px solid rgba(0, 0, 0, 0.1);">
@@ -194,7 +293,16 @@
                 </header>
                 
                 <div class="content">
-                    <form>
+                    <div id="settings-not-authenticated" style="text-align: center; padding: 20px;">
+                        <i class="fas fa-user-circle" style="font-size: 64px; color: #ccc; margin-bottom: 20px;"></i>
+                        <h2>Nie jesteś zalogowany</h2>
+                        <p>Aby edytować ustawienia, musisz się zarejestrować jako zawodnik.</p>
+                        <a href="register.html" class="btn btn-primary" style="text-decoration: none; margin-top: 20px;">
+                            <i class="fas fa-user-plus"></i> Zarejestruj się
+                        </a>
+                    </div>
+                    
+                    <form id="settings-form" style="display: none;">
                         <div class="form-group">
                             <label class="form-label" for="name">Imię i nazwisko</label>
                             <input type="text" id="name" class="form-input" placeholder="Jan Kowalski">
@@ -206,18 +314,40 @@
                         </div>
                         
                         <div class="form-group">
-                            <label class="form-label">Kolor śledzenia</label>
-                            <div class="color-options">
-                                <div class="color-option selected" style="background-color: #1a73e8;"></div>
-                                <div class="color-option" style="background-color: #4caf50;"></div>
-                                <div class="color-option" style="background-color: #f44336;"></div>
-                                <div class="color-option" style="background-color: #ff9800;"></div>
-                                <div class="color-option" style="background-color: #9c27b0;"></div>
-                            </div>
+                            <label class="form-label" for="email">Email</label>
+                            <input type="email" id="email" class="form-input" placeholder="jan.kowalski@example.com">
                         </div>
                         
-                        <button type="button" class="btn btn-primary" onclick="showScreen('home-screen')">
+                        <div class="form-group">
+                            <label class="form-label" for="phone">Telefon</label>
+                            <input type="tel" id="phone" class="form-input" placeholder="+48 123 456 789">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="emergency-contact">Kontakt awaryjny</label>
+                            <input type="text" id="emergency-contact" class="form-input" placeholder="Anna Kowalska +48 987 654 321">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Kolor śledzenia</label>
+                            <div class="color-options">
+                                <div class="color-option" style="background-color: #1a73e8;" data-color="#1a73e8"></div>
+                                <div class="color-option" style="background-color: #4caf50;" data-color="#4caf50"></div>
+                                <div class="color-option" style="background-color: #f44336;" data-color="#f44336"></div>
+                                <div class="color-option" style="background-color: #ff9800;" data-color="#ff9800"></div>
+                                <div class="color-option" style="background-color: #9c27b0;" data-color="#9c27b0"></div>
+                            </div>
+                            <input type="hidden" id="tracking-color" value="#1a73e8">
+                        </div>
+                        
+                        <div id="settings-error" style="color: #f44336; margin-bottom: 15px; display: none;"></div>
+                        
+                        <button type="button" class="btn btn-primary" id="save-settings-btn">
                             <i class="fas fa-save"></i> Zapisz ustawienia
+                        </button>
+                        
+                        <button type="button" class="btn" style="background-color: #f8f9fa; color: #333; margin-top: 10px;" onclick="showScreen('profile-screen')">
+                            <i class="fas fa-arrow-left"></i> Anuluj
                         </button>
                     </form>
                 </div>
@@ -239,9 +369,9 @@
                         <i class="fas fa-trophy nav-icon"></i>
                         <span>Wyniki</span>
                     </a>
-                    <a href="#" class="nav-item active" onclick="showScreen('settings-screen')">
-                        <i class="fas fa-cog nav-icon"></i>
-                        <span>Ustawienia</span>
+                    <a href="#" class="nav-item" onclick="showScreen('profile-screen')">
+                        <i class="fas fa-user nav-icon"></i>
+                        <span>Profil</span>
                     </a>
                 </nav>
             </div>
@@ -497,8 +627,11 @@
             });
         }
         
-        // Initialize color picker functionality
+        // Initialize app functionality
         document.addEventListener('DOMContentLoaded', function() {
+            // Check if user is authenticated
+            checkAuthentication();
+            
             // Set up color picker
             const colorOptions = document.querySelectorAll('.color-option');
             colorOptions.forEach(option => {
@@ -508,18 +641,213 @@
                     // Add selected class to clicked option
                     this.classList.add('selected');
                     
-                    // Store the selected color (could be used for tracking)
-                    const selectedColor = this.style.backgroundColor;
+                    // Store the selected color
+                    const selectedColor = this.getAttribute('data-color');
+                    document.getElementById('tracking-color').value = selectedColor;
                     console.log('Selected color:', selectedColor);
                     
-                    // You could update the route color in the map here
-                    // For demo purposes, we'll update the route path stroke color
+                    // Update route color in the map
                     const routePaths = document.querySelectorAll('.route-path path');
                     routePaths.forEach(path => {
                         path.style.stroke = selectedColor;
                     });
                 });
             });
+            
+            // Save settings button
+            const saveSettingsBtn = document.getElementById('save-settings-btn');
+            if (saveSettingsBtn) {
+                saveSettingsBtn.addEventListener('click', function() {
+                    saveSettings();
+                });
+            }
+            
+            // Logout button
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function() {
+                    logout();
+                });
+            }
+            
+            // Check authentication status
+            function checkAuthentication() {
+                showDebug('Checking authentication status...');
+                
+                if (window.trackingCommunication && window.trackingCommunication.participantProfile) {
+                    // User is authenticated
+                    showDebug('User is authenticated: ' + window.trackingCommunication.participantProfile.name);
+                    updateProfileUI(window.trackingCommunication.participantProfile);
+                } else {
+                    // Check if we have a participant ID in localStorage
+                    const participantId = localStorage.getItem('participantId');
+                    
+                    if (participantId && window.trackingCommunication) {
+                        showDebug('Found participant ID in localStorage: ' + participantId);
+                        showDebug('Attempting to authenticate...');
+                        
+                        // Set authentication callback
+                        window.trackingCommunication.setAuthenticationCallback(function(success, role, profile) {
+                            if (success && profile) {
+                                showDebug('Authentication successful');
+                                updateProfileUI(profile);
+                            } else {
+                                showDebug('Authentication failed');
+                                showUnauthenticatedUI();
+                            }
+                        });
+                        
+                        // Authenticate with saved ID
+                        window.trackingCommunication.authenticateParticipant(participantId);
+                    } else {
+                        showDebug('No authentication data found');
+                        showUnauthenticatedUI();
+                    }
+                }
+            }
+            
+            // Update profile UI with participant data
+            function updateProfileUI(profile) {
+                // Show authenticated UI
+                document.getElementById('profile-not-authenticated').style.display = 'none';
+                document.getElementById('profile-authenticated').style.display = 'block';
+                document.getElementById('settings-not-authenticated').style.display = 'none';
+                document.getElementById('settings-form').style.display = 'block';
+                
+                // Update profile screen
+                document.getElementById('profile-name').textContent = profile.name;
+                document.getElementById('profile-sail').textContent = profile.sailNumber;
+                document.getElementById('profile-email').textContent = profile.email || 'Nie podano';
+                document.getElementById('profile-phone').textContent = profile.phone || 'Nie podano';
+                document.getElementById('profile-emergency').textContent = profile.emergencyContact || 'Nie podano';
+                
+                // Set avatar initials
+                const nameParts = profile.name.split(' ');
+                let initials = '';
+                if (nameParts.length >= 2) {
+                    initials = nameParts[0].charAt(0) + nameParts[1].charAt(0);
+                } else {
+                    initials = nameParts[0].charAt(0);
+                }
+                document.getElementById('profile-avatar').textContent = initials.toUpperCase();
+                document.getElementById('profile-avatar').style.backgroundColor = profile.trackingColor || '#1a73e8';
+                
+                // Update settings form
+                document.getElementById('name').value = profile.name;
+                document.getElementById('sail-number').value = profile.sailNumber;
+                document.getElementById('email').value = profile.email || '';
+                document.getElementById('phone').value = profile.phone || '';
+                document.getElementById('emergency-contact').value = profile.emergencyContact || '';
+                document.getElementById('tracking-color').value = profile.trackingColor || '#1a73e8';
+                
+                // Select the correct color option
+                const colorOptions = document.querySelectorAll('.color-option');
+                colorOptions.forEach(option => {
+                    option.classList.remove('selected');
+                    if (option.getAttribute('data-color') === profile.trackingColor) {
+                        option.classList.add('selected');
+                    }
+                });
+                
+                showDebug('Profile UI updated with data for: ' + profile.name);
+            }
+            
+            // Show unauthenticated UI
+            function showUnauthenticatedUI() {
+                document.getElementById('profile-not-authenticated').style.display = 'block';
+                document.getElementById('profile-authenticated').style.display = 'none';
+                document.getElementById('settings-not-authenticated').style.display = 'block';
+                document.getElementById('settings-form').style.display = 'none';
+                
+                showDebug('Showing unauthenticated UI');
+            }
+            
+            // Save settings
+            function saveSettings() {
+                showDebug('Saving settings...');
+                
+                const name = document.getElementById('name').value.trim();
+                const sailNumber = document.getElementById('sail-number').value.trim();
+                const email = document.getElementById('email').value.trim();
+                const phone = document.getElementById('phone').value.trim();
+                const emergencyContact = document.getElementById('emergency-contact').value.trim();
+                const trackingColor = document.getElementById('tracking-color').value;
+                
+                // Validate form
+                if (!name || !sailNumber) {
+                    document.getElementById('settings-error').textContent = 'Imię, nazwisko i numer żagla są wymagane.';
+                    document.getElementById('settings-error').style.display = 'block';
+                    return;
+                }
+                
+                // Create profile data
+                const profileData = {
+                    name: name,
+                    sailNumber: sailNumber,
+                    email: email,
+                    phone: phone,
+                    emergencyContact: emergencyContact,
+                    trackingColor: trackingColor
+                };
+                
+                // Update profile
+                if (window.trackingCommunication) {
+                    window.trackingCommunication.updateProfile(profileData, function(success, profile, errorMessage) {
+                        if (success) {
+                            showDebug('Profile updated successfully');
+                            updateProfileUI(profile);
+                            showScreen('profile-screen');
+                        } else {
+                            showDebug('Error updating profile: ' + errorMessage);
+                            document.getElementById('settings-error').textContent = errorMessage || 'Wystąpił błąd podczas aktualizacji profilu.';
+                            document.getElementById('settings-error').style.display = 'block';
+                        }
+                    });
+                } else {
+                    // Fallback if tracking communication is not available
+                    showDebug('Tracking communication not available, using localStorage fallback');
+                    
+                    // Store data in localStorage
+                    localStorage.setItem('userName', name);
+                    localStorage.setItem('sailNumber', sailNumber);
+                    localStorage.setItem('trackingColor', trackingColor);
+                    
+                    // Update UI
+                    const mockProfile = {
+                        name: name,
+                        sailNumber: sailNumber,
+                        email: email,
+                        phone: phone,
+                        emergencyContact: emergencyContact,
+                        trackingColor: trackingColor
+                    };
+                    updateProfileUI(mockProfile);
+                    showScreen('profile-screen');
+                }
+            }
+            
+            // Logout
+            function logout() {
+                showDebug('Logging out...');
+                
+                // Clear localStorage
+                localStorage.removeItem('participantId');
+                
+                // Reset tracking communication
+                if (window.trackingCommunication) {
+                    window.trackingCommunication.participantId = null;
+                    window.trackingCommunication.participantProfile = null;
+                    window.trackingCommunication.isAuthenticated = false;
+                }
+                
+                // Show unauthenticated UI
+                showUnauthenticatedUI();
+                
+                // Go to home screen
+                showScreen('home-screen');
+                
+                showDebug('Logout complete');
+            }
             
             // Simulate countdown on ready screen
             let countdownValue = 5;

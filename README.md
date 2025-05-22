@@ -34,28 +34,38 @@ To run the application locally:
 
 This application is configured for easy deployment to [Render.com](https://render.com).
 
-### Option 1: Deploy using the render.yaml file
+For detailed deployment instructions, see the [DEPLOYMENT.md](DEPLOYMENT.md) file.
+
+### Quick Start
 
 1. Fork or clone this repository to your GitHub account.
 2. In your Render dashboard, go to "Blueprints" and click "New Blueprint Instance".
 3. Connect your GitHub account and select the repository.
 4. Render will automatically detect the `render.yaml` file and configure the service.
-5. Click "Apply" to deploy the application.
+5. You'll be prompted to enter a value for the `ORGANIZER_PASSWORD` environment variable.
+6. Click "Apply" to deploy the application.
 
-### Option 2: Manual deployment
+### Testing WebSockets
 
-1. In your Render dashboard, click "New" and select "Web Service".
-2. Connect your GitHub repository.
-3. Configure the service with the following settings:
-   - **Name**: king-of-the-bay (or your preferred name)
-   - **Environment**: Node
-   - **Build Command**: `npm install`
-   - **Start Command**: `npm start`
-   - **Environment Variables**:
-     - `PORT`: 10000
-     - `NODE_ENV`: production
+The application includes two test scripts to verify WebSocket functionality:
 
-4. Click "Create Web Service" to deploy.
+- `npm run test-websocket` - Test WebSockets locally
+- `npm run test-deployed` - Test WebSockets on your deployed Render.com application
+
+See the [DEPLOYMENT.md](DEPLOYMENT.md) file for detailed testing instructions.
+
+## Data Storage
+
+The application stores tracking data and participant information in a `data` directory:
+
+- `data/tracking_data.json`: Contains real-time GPS tracking information
+- `data/participants.json`: Contains participant profiles and registration information
+
+When deployed to Render.com, this data is stored on the ephemeral filesystem. For production use with persistent data, consider:
+
+1. Implementing a database solution (MongoDB, PostgreSQL, etc.)
+2. Setting up periodic backups of the data directory
+3. Using Render.com's disk add-on for persistent storage
 
 ## WebSocket Configuration
 
