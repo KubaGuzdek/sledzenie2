@@ -103,75 +103,105 @@
         }
     }
     
-    // Start sending position updates from GPS tracker
-    function startSending(gpsTracker) {
-        if (!gpsTracker) {
-            console.error('GPS tracker not provided to startSending');
+    // Start sending position updates for a participant
+    function startSending(participantNumber) {
+        if (!participantNumber) {
+            console.error('Participant number not provided to startSending');
             return;
         }
         
-        // Store reference to GPS tracker
-        window.currentGPSTracker = gpsTracker;
-        
-        // Get participant number from localStorage or URL
-        const participantNumber = localStorage.getItem('participantNumber') || 
-                                 new URLSearchParams(window.location.search).get('participant') ||
-                                 Math.floor(Math.random() * 200) + 1;
+        // Store participant number
+        window.currentParticipantNumber = participantNumber;
         
         console.log('Started sending for participant #' + participantNumber);
-        
-        // Set up position update callback to send data to organizer
-        const originalCallback = gpsTracker.onPositionUpdate;
-        gpsTracker.onPositionUpdate = function(position) {
-            // Call original callback first
-            if (originalCallback) {
-                originalCallback(position);
-            }
-            
-            // Send update to organizer
-            const participantData = {
-                participantNumber: parseInt(participantNumber),
-                position: {
-                    latitude: position.latitude,
-                    longitude: position.longitude,
-                    accuracy: position.accuracy,
-                    timestamp: position.timestamp
-                },
-                status: 'active',
-                speed: position.speed || 0
-            };
-            
-            sendParticipantUpdate(participantData);
-        };
         
         // Initialize connection if not already connected
         if (!socket) {
             initializeConnection();
         }
+        
+        // Start sending regular updates
+        startSendingUpdates(participantNumber);
+    }
+    
+    // Start sending regular position updates
+    function startSendingUpdates(participantNumber) {
+        // Clear any existing interval
+        if (window.sendingInterval) {
+            clearInterval(window.sendingInterval);
+        }
+        
+        // Send updates every 2 seconds
+        window.sendingInterval = setInterval(() => {
+            // Get current position from GPS tracker if available
+            if (window.trackingApp && window.trackingApp.gpsTracker && window.trackingApp.gpsTracker.currentPosition) {
+                const position = window.trackingApp.gpsTracker.currentPosition;
+                const status = window.trackingApp.gpsTracker.trackingActive ? 'active' : 'inactive';
+                
+                const participantData = {
+                    participantNumber: parseInt(participantNumber),
+                    position: {
+                        latitude: position.latitude,
+                        longitude: position.longitude,
+                        accuracy: position.accuracy,
+                        timestamp: position.timestamp
+                    },
+                    status: status,
+                    speed: position.speed || 0
+                };
+                
+                sendParticipantUpdate(participantData);
+            } else {
+                // Send simulated data if no real GPS available
+                const baseLatitude = 54.6960;
+                const baseLongitude = 18.4310;
+                
+                const participantData = {
+                    participantNumber: parseInt(participantNumber),
+                    position: {
+                        latitude: baseLatitude + (Math.random() * 0.01 - 0.005),
+                        longitude: baseLongitude + (Math.random() * 0.01 - 0.005),
+                        accuracy: 5 + Math.random() * 10,
+                        timestamp: Date.now()
+                    },
+                    status: 'active',
+                    speed: 4 + Math.random() * 4 // 4-8 m/s
+                };
+                
+                sendParticipantUpdate(participantData);
+            }
+        }, 2000); // Send every 2 seconds
     }
     
     // Stop sending position updates
     function stopSending() {
-        if (window.currentGPSTracker) {
-            // Get participant number
-            const participantNumber = localStorage.getItem('participantNumber') || 
-                                     new URLSearchParams(window.location.search).get('participant') ||
-                                     1;
+        // Clear sending interval
+        if (window.sendingInterval) {
+            clearInterval(window.sendingInterval);
+            window.sendingInterval = null;
+        }
+        
+        if (window.currentParticipantNumber) {
+            // Get current position if available
+            let currentPosition = null;
+            if (window.trackingApp && window.trackingApp.gpsTracker) {
+                currentPosition = window.trackingApp.gpsTracker.currentPosition;
+            }
             
             // Send final update with inactive status
             const participantData = {
-                participantNumber: parseInt(participantNumber),
-                position: window.currentGPSTracker.currentPosition,
+                participantNumber: parseInt(window.currentParticipantNumber),
+                position: currentPosition,
                 status: 'inactive',
                 speed: 0
             };
             
             sendParticipantUpdate(participantData);
-            console.log('Stopped sending for participant #' + participantNumber);
+            console.log('Stopped sending for participant #' + window.currentParticipantNumber);
         }
         
         // Clear reference
-        window.currentGPSTracker = null;
+        window.currentParticipantNumber = null;
     }
     
     // Send SOS signal
