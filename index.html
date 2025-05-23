@@ -3,698 +3,569 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>King Of theBay - GPS Tracking</title>
+    <title>King Of theBay - Panel Zawodnika</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #1a73e8 0%, #4285f4 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            background-color: #1a73e8;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: white;
+            font-size: 32px;
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0 0 10px 0;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+        
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .input-group {
+            text-align: left;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 18px;
+            text-align: center;
+            font-weight: 600;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: #1a73e8;
+        }
+        
+        .login-btn {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .login-btn:hover {
+            background-color: #1557b0;
+        }
+        
+        .login-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .organizer-link {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .organizer-link a {
+            color: #1a73e8;
+            text-decoration: none;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .organizer-link a:hover {
+            text-decoration: underline;
+        }
+        
+        .error-message {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .tracking-panel {
+            display: none;
+        }
+        
+        .tracking-panel.active {
+            display: block;
+        }
+        
+        .participant-info {
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .participant-number {
+            font-size: 48px;
+            font-weight: 700;
+            color: #1a73e8;
+            margin-bottom: 10px;
+        }
+        
+        .participant-status {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-active {
+            background-color: #4caf50;
+        }
+        
+        .status-inactive {
+            background-color: #ccc;
+        }
+        
+        .tracking-btn {
+            width: 100%;
+            padding: 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .tracking-btn.start {
+            background-color: #4caf50;
+            color: white;
+        }
+        
+        .tracking-btn.start:hover {
+            background-color: #45a049;
+        }
+        
+        .tracking-btn.stop {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .tracking-btn.stop:hover {
+            background-color: #da190b;
+        }
+        
+        .location-info {
+            background-color: #e3f2fd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            text-align: left;
+        }
+        
+        .location-info h4 {
+            margin: 0 0 10px 0;
+            color: #1a73e8;
+        }
+        
+        .location-info p {
+            margin: 5px 0;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .logout-btn {
+            background-color: #f5f5f5;
+            color: #666;
+            border: 1px solid #e0e0e0;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.2s;
+        }
+        
+        .logout-btn:hover {
+            background-color: #eeeeee;
+        }
+    </style>
 </head>
 <body>
-    <div class="app-container">
-        <a href="organizer-view.html" style="position: fixed; top: 10px; right: 10px; background-color: #1a73e8; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; z-index: 1000;">
-            <i class="fas fa-users-cog"></i> Panel Organizatora
-        </a>
-        <!-- Main container that holds all screens -->
-        <div id="app" class="mobile-container">
-            <!-- Only one screen will be displayed at a time -->
-            
-            <!-- HOME SCREEN -->
-            <div id="home-screen" class="screen active">
-                <header class="app-header" style="background-color: white; color: #1a73e8; border-bottom: 1px solid rgba(0, 0, 0, 0.1);">
-                    <div style="display: flex; align-items: center; padding: 8px 15px; border-radius: 8px;">
-                        <img src="img/logo.png" alt="Logo zawodów" class="app-logo" style="height: 60px; margin-right: 10px;">
-                        <h1 class="app-title">King Of theBay</h1>
-                    </div>
-                </header>
-                
-                <div class="content">
-                    <!-- Login form for participants -->
-                    <div id="login-form" style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                        <h2 style="margin-top: 0; color: #333; text-align: center;">Zaloguj się</h2>
-                        <p style="text-align: center; color: #666; margin-bottom: 20px;">Wpisz swój numer żagla, aby rozpocząć śledzenie</p>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="sail-number-login">Numer żagla</label>
-                            <input type="text" id="sail-number-login" class="form-input" placeholder="np. POL-123" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px;">
-                        </div>
-                        
-                        <div id="login-error" style="color: #f44336; margin-bottom: 15px; display: none; text-align: center;"></div>
-                        
-                        <button type="button" class="btn btn-primary" id="login-btn" style="width: 100%;">
-                            <i class="fas fa-sign-in-alt"></i> Zaloguj się
-                        </button>
-                    </div>
-                    
-                    <!-- Status indicators (hidden until logged in) -->
-                    <div id="status-indicators" style="display: none;">
-                        <div class="status-indicator">
-                            <i class="fas fa-satellite-dish status-icon status-good"></i>
-                            <div class="status-text">Sygnał GPS: Dobry</div>
-                        </div>
-                        
-                        <button class="btn btn-primary" onclick="showScreen('map-screen')">
-                            <i class="fas fa-play-circle"></i> Rozpocznij śledzenie
-                        </button>
-                        
-                        <div class="status-indicator">
-                            <i class="fas fa-battery-three-quarters status-icon status-good"></i>
-                            <div class="status-text">Bateria: 85%</div>
-                        </div>
-                        
-                        <div class="status-indicator">
-                            <i class="fas fa-signal status-icon status-good"></i>
-                            <div class="status-text">Sygnał sieci: Dobry</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <nav class="nav-bar">
-                    <a href="#" class="nav-item active" onclick="showScreen('home-screen')">
-                        <i class="fas fa-home nav-icon"></i>
-                        <span>Start</span>
-                    </a>
-                    <a href="#" class="nav-item" onclick="showScreen('map-screen')">
-                        <i class="fas fa-map-marked-alt nav-icon"></i>
-                        <span>Mapa</span>
-                    </a>
-                    <a href="#" class="nav-item" onclick="showScreen('ready-screen')">
-                        <i class="fas fa-flag-checkered nav-icon"></i>
-                        <span>Start</span>
-                    </a>
-                    <a href="#" class="nav-item" onclick="showScreen('results-screen')">
-                        <i class="fas fa-trophy nav-icon"></i>
-                        <span>Wyniki</span>
-                    </a>
-                    <a href="#" class="nav-item" onclick="showScreen('settings-screen')">
-                        <i class="fas fa-cog nav-icon"></i>
-                        <span>Ustawienia</span>
-                    </a>
-                </nav>
+    <div class="container">
+        <!-- Login Panel -->
+        <div id="login-panel">
+            <div class="logo">
+                <i class="fas fa-anchor"></i>
             </div>
+            <h1>King Of theBay</h1>
+            <p class="subtitle">Panel Zawodnika</p>
             
-            <!-- LIVE MAP SCREEN -->
-            <div id="map-screen" class="screen">
-                <header class="app-header" style="background-color: white; color: #1a73e8; border-bottom: 1px solid rgba(0, 0, 0, 0.1);">
-                    <div style="display: flex; align-items: center; padding: 8px 15px; border-radius: 8px;">
-                        <img src="img/logo.png" alt="Logo zawodów" class="app-logo" style="height: 60px; margin-right: 10px;">
-                        <h1 class="app-title">Mapa na żywo</h1>
-                    </div>
-                </header>
-                
-                <div class="content">
-                    <div class="map-container live-map">
-                        <div class="map-grid"></div>
-                        <div class="map-marker current-position"></div>
-                        <div class="compass">N</div>
-                        <div class="map-label">Zatoka Pucka</div>
-                    </div>
-                    
-                    <div class="stats-container">
-                        <div class="stat-card">
-                            <div class="stat-value">24.5</div>
-                            <div class="stat-label">km/h</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">3.2</div>
-                            <div class="stat-label">km</div>
-                        </div>
-                    </div>
-                    
-                    <button class="btn btn-primary" id="end-tracking-btn">
-                        <i class="fas fa-stop-circle"></i> Zakończ śledzenie
-                    </button>
-                    
-                    <button class="sos-button" id="sos-btn" style="touch-action: manipulation;">
-                        SOS
-                    </button>
+            <form class="login-form" id="login-form">
+                <div class="input-group">
+                    <label for="participant-number">Twój numer zawodnika</label>
+                    <input 
+                        type="number" 
+                        id="participant-number" 
+                        min="1" 
+                        max="200" 
+                        placeholder="1-200"
+                        required
+                    >
                 </div>
                 
-                <nav class="nav-bar">
-                    <a href="#" class="nav-item" onclick="showScreen('home-screen')">
-                        <i class="fas fa-home nav-icon"></i>
-                        <span>Start</span>
-                    </a>
-                    <a href="#" class="nav-item active" onclick="showScreen('map-screen')">
-                        <i class="fas fa-map-marked-alt nav-icon"></i>
-                        <span>Mapa</span>
-                    </a>
-                    <a href="#" class="nav-item" onclick="showScreen('ready-screen')">
-                        <i class="fas fa-flag-checkered nav-icon"></i>
-                        <span>Start</span>
-                    </a>
-                    <a href="#" class="nav-item" onclick="showScreen('results-screen')">
-                        <i class="fas fa-trophy nav-icon"></i>
-                        <span>Wyniki</span>
-                    </a>
-                    <a href="#" class="nav-item" onclick="showScreen('settings-screen')">
-                        <i class="fas fa-cog nav-icon"></i>
-                        <span>Ustawienia</span>
-                    </a>
-                </nav>
-            </div>
-            
-            <!-- READY SCREEN -->
-            <div id="ready-screen" class="screen">
-                <header class="app-header" style="background-color: white; color: #1a73e8; border-bottom: 1px solid rgba(0, 0, 0, 0.1);">
-                    <div style="display: flex; align-items: center; padding: 8px 15px; border-radius: 8px;">
-                        <img src="img/logo.png" alt="Logo zawodów" class="app-logo" style="height: 60px; margin-right: 10px;">
-                        <h1 class="app-title">Gotowość do startu</h1>
-                    </div>
-                </header>
+                <button type="submit" class="login-btn" id="login-btn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Zaloguj się
+                </button>
                 
-                <div class="content">
-                    <div class="countdown">
-                        <div class="countdown-value">5</div>
-                        <div class="countdown-label">Sekund do startu</div>
-                    </div>
-                    
-                    <div class="waiting-message">
-                        <div class="waiting-text">Oczekiwanie na sygnał startu...</div>
-                    </div>
-                    
-                    <button class="btn btn-primary" onclick="showScreen('map-screen')">
-                        <i class="fas fa-check-circle"></i> Potwierdzam gotowość
-                    </button>
-                    
-                    <button class="btn btn-danger" onclick="showScreen('home-screen')">
-                        <i class="fas fa-times-circle"></i> Anuluj
-                    </button>
+                <div class="error-message" id="error-message">
+                    Nieprawidłowy numer zawodnika. Wprowadź numer od 1 do 200.
                 </div>
-                
-                <nav class="nav-bar">
-                    <a href="#" class="nav-item" onclick="showScreen('home-screen')">
-                        <i class="fas fa-home nav-icon"></i>
-                        <span>Start</span>
-                    </a>
-                    <a href="#" class="nav-item" onclick="showScreen('map-screen')">
-                        <i class="fas fa-map-marked-alt nav-icon"></i>
-                        <span>Mapa</span>
-                    </a>
-                    <a href="#" class="nav-item active" onclick="showScreen('ready-screen')">
-                        <i class="fas fa-flag-checkered nav-icon"></i>
-                        <span>Start</span>
-                    </a>
-                    <a href="#" class="nav-item" onclick="showScreen('results-screen')">
-                        <i class="fas fa-trophy nav-icon"></i>
-                        <span>Wyniki</span>
-                    </a>
-                    <a href="#" class="nav-item" onclick="showScreen('settings-screen')">
-                        <i class="fas fa-cog nav-icon"></i>
-                        <span>Ustawienia</span>
-                    </a>
-                </nav>
-            </div>
+            </form>
             
-            <!-- PROFILE SCREEN -->
-            <div id="profile-screen" class="screen">
-                <header class="app-header" style="background-color: white; color: #1a73e8; border-bottom: 1px solid rgba(0, 0, 0, 0.1);">
-                    <div style="display: flex; align-items: center; padding: 8px 15px; border-radius: 8px;">
-                        <img src="img/logo.png" alt="Logo zawodów" class="app-logo" style="height: 60px; margin-right: 10px;">
-                        <h1 class="app-title">Profil zawodnika</h1>
-                    </div>
-                </header>
-                
-                <div class="content">
-                    <div id="profile-not-authenticated" style="text-align: center; padding: 20px;">
-                        <i class="fas fa-user-circle" style="font-size: 64px; color: #ccc; margin-bottom: 20px;"></i>
-                        <h2>Nie jesteś zalogowany</h2>
-                        <p>Aby zobaczyć profil, zaloguj się podając numer żagla na stronie głównej.</p>
-                        <button class="btn btn-primary" onclick="showScreen('home-screen')" style="margin-top: 20px;">
-                            <i class="fas fa-sign-in-alt"></i> Przejdź do logowania
-                        </button>
-                    </div>
-                    
-                    <div id="profile-authenticated" style="display: none;">
-                        <div style="text-align: center; margin-bottom: 20px;">
-                            <div style="width: 100px; height: 100px; border-radius: 50%; background-color: #1a73e8; margin: 0 auto; display: flex; justify-content: center; align-items: center; color: white; font-size: 48px;" id="profile-avatar">
-                                ?
-                            </div>
-                            <h2 id="profile-name" style="margin-top: 10px;">Zawodnik</h2>
-                            <div id="profile-sail" style="background-color: #1a73e8; color: white; padding: 5px 10px; border-radius: 4px; display: inline-block; margin-top: 5px;">POL-000</div>
-                        </div>
-                        
-                        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                            <h3 style="margin-top: 0; color: #333; font-size: 16px;">Statystyki</h3>
-                            <div style="display: flex; justify-content: space-between; text-align: center;">
-                                <div>
-                                    <div style="font-size: 24px; font-weight: 700; color: #1a73e8;">0</div>
-                                    <div style="color: #666; font-size: 14px;">Wyścigi</div>
-                                </div>
-                                <div>
-                                    <div style="font-size: 24px; font-weight: 700; color: #1a73e8;">0</div>
-                                    <div style="color: #666; font-size: 14px;">Podium</div>
-                                </div>
-                                <div>
-                                    <div style="font-size: 24px; font-weight: 700; color: #1a73e8;">0.0</div>
-                                    <div style="color: #666; font-size: 14px;">km</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <button class="btn" style="background-color: #f44336; color: white; margin-top: 10px;" id="logout-btn">
-                            <i class="fas fa-sign-out-alt"></i> Wyloguj się
-                        </button>
-                    </div>
-                </div>
-                
-                <nav class="nav-bar">
-                    <a href="#" class="nav-item" onclick="showScreen('home-screen')">
-                        <i class="fas fa-home nav-icon"></i>
-                        <span>Start</span>
-                    </a>
-                    <a href="#" class="nav-item" onclick="showScreen('map-screen')">
-                        <i class="fas fa-map-marked-alt nav-icon"></i>
-                        <span>Mapa</span>
-                    </a>
-                    <a href="#" class="nav-item" onclick="showScreen('ready-screen')">
-                        <i class="fas fa-flag-checkered nav-icon"></i>
-                        <span>Start</span>
-                    </a>
-                    <a href="#" class="nav-item" onclick="showScreen('results-screen')">
-                        <i class="fas fa-trophy nav-icon"></i>
-                        <span>Wyniki</span>
-                    </a>
-                    <a href="#" class="nav-item active" onclick="showScreen('profile-screen')">
-                        <i class="fas fa-user nav-icon"></i>
-                        <span>Profil</span>
-                    </a>
-                </nav>
-            </div>
-            
-            <!-- SETTINGS SCREEN -->
-            <div id="settings-screen" class="screen">
-                <header class="app-header" style="background-color: white; color: #1a73e8; border-bottom: 1px solid rgba(0, 0, 0, 0.1);">
-                    <div style="display: flex; align-items: center; padding: 8px 15px; border-radius: 8px;">
-                        <img src="img/logo.png" alt="Logo zawodów" class="app-logo" style="height: 60px; margin-right: 10px;">
-                        <h1 class="app-title">Ustawienia</h1>
-                    </div>
-                </header>
-                
-                <div class="content">
-                    <div id="settings-not-authenticated" style="text-align: center; padding: 20px;">
-                        <i class="fas fa-user-circle" style="font-size: 64px; color: #ccc; margin-bottom: 20px;"></i>
-                        <h2>Nie jesteś zalogowany</h2>
-                        <p>Aby edytować ustawienia, zaloguj się podając numer żagla na stronie głównej.</p>
-                        <button class="btn btn-primary" onclick="showScreen('home-screen')" style="margin-top: 20px;">
-                            <i class="fas fa-sign-in-alt"></i> Przejdź do logowania
-                        </button>
-                    </div>
-                    
-                    <div id="settings-authenticated" style="display: none;">
-                        <p style="text-align: center; color: #666;">Ustawienia są zarządzane przez organizatora.</p>
-                        <p style="text-align: center; color: #666;">Twój numer żagla: <strong id="settings-sail-number">POL-000</strong></p>
-                    </div>
-                </div>
-                
-                <nav class="nav-bar">
-                    <a href="#" class="nav-item" onclick="showScreen('home-screen')">
-                        <i class="fas fa-home nav-icon"></i>
-                        <span>Start</span>
-                    </a>
-                    <a href="#" class="nav-item" onclick="showScreen('map-screen')">
-                        <i class="fas fa-map-marked-alt nav-icon"></i>
-                        <span>Mapa</span>
-                    </a>
-                    <a href="#" class="nav-item" onclick="showScreen('ready-screen')">
-                        <i class="fas fa-flag-checkered nav-icon"></i>
-                        <span>Start</span>
-                    </a>
-                    <a href="#" class="nav-item" onclick="showScreen('results-screen')">
-                        <i class="fas fa-trophy nav-icon"></i>
-                        <span>Wyniki</span>
-                    </a>
-                    <a href="#" class="nav-item active" onclick="showScreen('settings-screen')">
-                        <i class="fas fa-cog nav-icon"></i>
-                        <span>Ustawienia</span>
-                    </a>
-                </nav>
-            </div>
-            
-            <!-- RESULTS SCREEN -->
-            <div id="results-screen" class="screen">
-                <header class="app-header" style="background-color: white; color: #1a73e8; border-bottom: 1px solid rgba(0, 0, 0, 0.1);">
-                    <div style="display: flex; align-items: center; padding: 8px 15px; border-radius: 8px;">
-                        <img src="img/logo.png" alt="Logo zawodów" class="app-logo" style="height: 60px; margin-right: 10px;">
-                        <h1 class="app-title">Wyniki zawodów</h1>
-                    </div>
-                </header>
-                
-                <div class="content">
-                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
-                        <h2 style="margin: 0; color: #1a73e8; font-size: 18px;">Twoja pozycja</h2>
-                        <div style="display: flex; align-items: center; justify-content: center; margin-top: 10px;">
-                            <div style="font-size: 48px; font-weight: 700; color: #1a73e8;">-</div>
-                            <div style="margin-left: 10px; text-align: left;">
-                                <div style="font-weight: 500;">miejsce</div>
-                                <div style="color: #666; font-size: 14px;">Brak danych</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div style="margin-bottom: 20px;">
-                        <h3 style="margin: 0 0 10px 0; color: #333;">Wyniki wyścigów</h3>
-                        <div style="background-color: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden;">
-                            <div style="display: flex; padding: 12px 15px; border-bottom: 1px solid #eee; font-weight: 500; color: #666;">
-                                <div style="flex: 0 0 40px;">Poz.</div>
-                                <div style="flex: 1;">Zawodnik</div>
-                                <div style="flex: 0 0 80px; text-align: right;">Czas</div>
-                            </div>
-                            
-                            <div style="padding: 20px; text-align: center; color: #666;">
-                                Brak wyników do wyświetlenia
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <nav class="nav-bar">
-                    <a href="#" class="nav-item" onclick="showScreen('home-screen')">
-                        <i class="fas fa-home nav-icon"></i>
-                        <span>Start</span>
-                    </a>
-                    <a href="#" class="nav-item" onclick="showScreen('map-screen')">
-                        <i class="fas fa-map-marked-alt nav-icon"></i>
-                        <span>Mapa</span>
-                    </a>
-                    <a href="#" class="nav-item" onclick="showScreen('ready-screen')">
-                        <i class="fas fa-flag-checkered nav-icon"></i>
-                        <span>Start</span>
-                    </a>
-                    <a href="#" class="nav-item active" onclick="showScreen('results-screen')">
-                        <i class="fas fa-trophy nav-icon"></i>
-                        <span>Wyniki</span>
-                    </a>
-                    <a href="#" class="nav-item" onclick="showScreen('settings-screen')">
-                        <i class="fas fa-cog nav-icon"></i>
-                        <span>Ustawienia</span>
-                    </a>
-                </nav>
+            <div class="organizer-link">
+                <a href="organizer-view.html">
+                    <i class="fas fa-cog"></i>
+                    Panel Organizatora
+                </a>
             </div>
         </div>
-    </div>
-
-    <script src="js/tracking-communication.js"></script>
-    <script src="js/gps-tracking.js"></script>
-    
-    <!-- Debug information panel -->
-    <div id="debug-panel" style="position: fixed; bottom: 70px; left: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 10px; border-radius: 5px; font-size: 12px; z-index: 9999; display: none; max-height: 150px; overflow-y: auto;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-            <strong>Debug Info</strong>
-            <button onclick="document.getElementById('debug-panel').style.display='none'" style="background: none; border: none; color: white; font-size: 16px;">&times;</button>
-        </div>
-        <div id="debug-content"></div>
-    </div>
-    
-    <script>
-        // Debug functions
-        function showDebug(message) {
-            const debugPanel = document.getElementById('debug-panel');
-            const debugContent = document.getElementById('debug-content');
-            
-            // Show the panel
-            debugPanel.style.display = 'block';
-            
-            // Add timestamp to message
-            const now = new Date();
-            const timestamp = now.getHours().toString().padStart(2, '0') + ':' + 
-                             now.getMinutes().toString().padStart(2, '0') + ':' + 
-                             now.getSeconds().toString().padStart(2, '0');
-            
-            // Add the message to the content
-            debugContent.innerHTML += `<div>[${timestamp}] ${message}</div>`;
-            
-            // Scroll to bottom
-            debugContent.scrollTop = debugContent.scrollHeight;
-        }
         
-        // Show connection info on load
-        window.addEventListener('load', function() {
-            // Show debug panel with connection info
-            showDebug('App loaded successfully');
-            showDebug('User Agent: ' + navigator.userAgent);
-            showDebug('Checking GPS permissions...');
+        <!-- Tracking Panel -->
+        <div id="tracking-panel" class="tracking-panel">
+            <div class="participant-info">
+                <div class="participant-number" id="display-number">#1</div>
+                <div class="participant-status">
+                    <span class="status-indicator status-inactive" id="status-indicator"></span>
+                    <span id="status-text">Śledzenie wyłączone</span>
+                </div>
+            </div>
             
-            // Check if geolocation is available
-            if (navigator.geolocation) {
-                showDebug('Geolocation API is available');
-            } else {
-                showDebug('ERROR: Geolocation API not available');
+            <button class="tracking-btn start" id="tracking-btn">
+                <i class="fas fa-play"></i>
+                Włącz śledzenie
+            </button>
+            
+            <div class="location-info" id="location-info" style="display: none;">
+                <h4><i class="fas fa-map-marker-alt"></i> Aktualna pozycja</h4>
+                <p id="coordinates">Pobieranie lokalizacji...</p>
+                <p id="accuracy">Dokładność: -</p>
+                <p id="last-update">Ostatnia aktualizacja: -</p>
+            </div>
+            
+            <button class="logout-btn" id="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                Wyloguj się
+            </button>
+        </div>
+    </div>
+    
+    <script src="js/tracking-communication.js"></script>
+    <script>
+        let currentParticipant = null;
+        let trackingActive = false;
+        let watchId = null;
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            
+            // Check if participant is already logged in
+            const savedParticipant = localStorage.getItem('participantNumber');
+            if (savedParticipant) {
+                loginParticipant(parseInt(savedParticipant));
             }
-            
-            // Check if we're on a mobile device
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            showDebug('Device type: ' + (isMobile ? 'Mobile' : 'Desktop'));
-            
-            // Show server connection info
-            showDebug('Attempting to connect to server...');
         });
         
-        // Simple function to switch between screens
-        function showScreen(screenId) {
-            showDebug('Switching to screen: ' + screenId);
-            // Hide all screens
-            const screens = document.querySelectorAll('.screen');
-            screens.forEach(screen => {
-                screen.classList.remove('active');
-            });
-            
-            // Show the selected screen
-            document.getElementById(screenId).classList.add('active');
-            
-            // Update navigation
-            const navItems = document.querySelectorAll('.nav-item');
-            navItems.forEach(item => {
-                item.classList.remove('active');
-            });
-            
-            // Find and activate the corresponding nav item
-            const activeNavItems = document.querySelectorAll(`.nav-item[onclick*="${screenId}"]`);
-            activeNavItems.forEach(item => {
-                item.classList.add('active');
-            });
+        // Setup event listeners
+        function setupEventListeners() {
+            document.getElementById('login-form').addEventListener('submit', handleLogin);
+            document.getElementById('tracking-btn').addEventListener('click', toggleTracking);
+            document.getElementById('logout-btn').addEventListener('click', logout);
         }
         
-        // Initialize app functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            // Set up login form
-            const loginBtn = document.getElementById('login-btn');
-            if (loginBtn) {
-                loginBtn.addEventListener('click', function() {
-                    handleLogin();
-                });
+        // Handle login form submission
+        function handleLogin(event) {
+            event.preventDefault();
+            
+            const numberInput = document.getElementById('participant-number');
+            const participantNumber = parseInt(numberInput.value);
+            
+            if (participantNumber >= 1 && participantNumber <= 200) {
+                loginParticipant(participantNumber);
+                hideError();
+            } else {
+                showError();
+            }
+        }
+        
+        // Login participant
+        function loginParticipant(number) {
+            currentParticipant = number;
+            localStorage.setItem('participantNumber', number.toString());
+            
+            // Update UI
+            document.getElementById('display-number').textContent = `#${number}`;
+            document.getElementById('login-panel').style.display = 'none';
+            document.getElementById('tracking-panel').classList.add('active');
+            
+            console.log(`Participant #${number} logged in`);
+        }
+        
+        // Show error message
+        function showError() {
+            document.getElementById('error-message').style.display = 'block';
+        }
+        
+        // Hide error message
+        function hideError() {
+            document.getElementById('error-message').style.display = 'none';
+        }
+        
+        // Toggle tracking
+        function toggleTracking() {
+            if (trackingActive) {
+                stopTracking();
+            } else {
+                startTracking();
+            }
+        }
+        
+        // Start GPS tracking
+        function startTracking() {
+            if (!navigator.geolocation) {
+                alert('Twoja przeglądarka nie obsługuje geolokalizacji');
+                return;
             }
             
-            // Allow Enter key to submit login
-            const sailNumberInput = document.getElementById('sail-number-login');
-            if (sailNumberInput) {
-                sailNumberInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        handleLogin();
-                    }
-                });
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            };
+            
+            watchId = navigator.geolocation.watchPosition(
+                handleLocationUpdate,
+                handleLocationError,
+                options
+            );
+            
+            trackingActive = true;
+            updateTrackingUI();
+            
+            console.log(`Started tracking for participant #${currentParticipant}`);
+        }
+        
+        // Stop GPS tracking
+        function stopTracking() {
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
             }
             
-            // Logout button
-            const logoutBtn = document.getElementById('logout-btn');
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', function() {
-                    logout();
-                });
+            trackingActive = false;
+            updateTrackingUI();
+            
+            // Send stop tracking signal
+            sendTrackingData({
+                participantNumber: currentParticipant,
+                active: false,
+                position: null,
+                timestamp: new Date().toISOString()
+            });
+            
+            console.log(`Stopped tracking for participant #${currentParticipant}`);
+        }
+        
+        // Handle location update
+        function handleLocationUpdate(position) {
+            const locationData = {
+                participantNumber: currentParticipant,
+                active: true,
+                position: {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                },
+                accuracy: position.coords.accuracy,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Update UI
+            updateLocationInfo(locationData);
+            
+            // Send to server
+            sendTrackingData(locationData);
+        }
+        
+        // Handle location error
+        function handleLocationError(error) {
+            console.error('Location error:', error);
+            
+            let errorMessage = 'Błąd pobierania lokalizacji';
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMessage = 'Dostęp do lokalizacji został odrzucony';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMessage = 'Lokalizacja niedostępna';
+                    break;
+                case error.TIMEOUT:
+                    errorMessage = 'Przekroczono czas oczekiwania na lokalizację';
+                    break;
             }
             
-            // Check if user is already authenticated
-            checkAuthentication();
+            alert(errorMessage);
+            stopTracking();
+        }
+        
+        // Update tracking UI
+        function updateTrackingUI() {
+            const trackingBtn = document.getElementById('tracking-btn');
+            const statusIndicator = document.getElementById('status-indicator');
+            const statusText = document.getElementById('status-text');
+            const locationInfo = document.getElementById('location-info');
             
-            // Handle login
-            function handleLogin() {
-                const sailNumber = document.getElementById('sail-number-login').value.trim();
-                const loginError = document.getElementById('login-error');
+            if (trackingActive) {
+                trackingBtn.className = 'tracking-btn stop';
+                trackingBtn.innerHTML = '<i class="fas fa-stop"></i> Zatrzymaj śledzenie';
                 
-                // Clear previous errors
-                loginError.style.display = 'none';
+                statusIndicator.className = 'status-indicator status-active';
+                statusText.textContent = 'Śledzenie aktywne';
                 
-                // Validate input
-                if (!sailNumber) {
-                    loginError.textContent = 'Proszę wpisać numer żagla';
-                    loginError.style.display = 'block';
-                    return;
-                }
+                locationInfo.style.display = 'block';
+            } else {
+                trackingBtn.className = 'tracking-btn start';
+                trackingBtn.innerHTML = '<i class="fas fa-play"></i> Włącz śledzenie';
                 
-                showDebug('Attempting login with sail number: ' + sailNumber);
+                statusIndicator.className = 'status-indicator status-inactive';
+                statusText.textContent = 'Śledzenie wyłączone';
                 
-                // Try to authenticate with the server
-                if (window.trackingCommunication) {
-                    // Set authentication callback
-                    window.trackingCommunication.setAuthenticationCallback(function(success, role, profile, errorMessage) {
-                        if (success && profile) {
-                            showDebug('Login successful for: ' + profile.name);
-                            updateAuthenticatedUI(profile);
-                        } else {
-                            showDebug('Login failed: ' + (errorMessage || 'Unknown error'));
-                            loginError.textContent = errorMessage || 'Nie znaleziono zawodnika o tym numerze żagla';
-                            loginError.style.display = 'block';
-                        }
-                    });
-                    
-                    // Authenticate with sail number as participant ID
-                    window.trackingCommunication.authenticateParticipant(sailNumber);
+                locationInfo.style.display = 'none';
+            }
+        }
+        
+        // Update location info display
+        function updateLocationInfo(data) {
+            document.getElementById('coordinates').textContent = 
+                `${data.position.lat.toFixed(6)}, ${data.position.lng.toFixed(6)}`;
+            
+            document.getElementById('accuracy').textContent = 
+                `Dokładność: ${Math.round(data.accuracy)}m`;
+            
+            document.getElementById('last-update').textContent = 
+                `Ostatnia aktualizacja: ${new Date(data.timestamp).toLocaleTimeString()}`;
+        }
+        
+        // Send tracking data to server
+        function sendTrackingData(data) {
+            if (window.trackingCommunication) {
+                window.trackingCommunication.sendParticipantUpdate(data);
+            } else {
+                console.log('Tracking data (demo mode):', data);
+            }
+        }
+        
+        // Logout
+        function logout() {
+            // Stop tracking if active
+            if (trackingActive) {
+                stopTracking();
+            }
+            
+            // Clear saved data
+            localStorage.removeItem('participantNumber');
+            currentParticipant = null;
+            
+            // Reset UI
+            document.getElementById('participant-number').value = '';
+            document.getElementById('login-panel').style.display = 'block';
+            document.getElementById('tracking-panel').classList.remove('active');
+            hideError();
+            
+            console.log('Participant logged out');
+        }
+        
+        // Handle page visibility change (pause/resume tracking when app goes to background)
+        document.addEventListener('visibilitychange', function() {
+            if (trackingActive) {
+                if (document.hidden) {
+                    console.log('App went to background, tracking continues');
                 } else {
-                    // Fallback - create a simple profile
-                    showDebug('No tracking communication available, using fallback');
-                    const profile = {
-                        id: sailNumber,
-                        name: 'Zawodnik ' + sailNumber,
-                        sailNumber: sailNumber,
-                        trackingColor: '#1a73e8'
-                    };
-                    
-                    // Store in localStorage
-                    localStorage.setItem('participantId', sailNumber);
-                    localStorage.setItem('participantProfile', JSON.stringify(profile));
-                    
-                    updateAuthenticatedUI(profile);
+                    console.log('App returned to foreground');
                 }
             }
-            
-            // Check authentication status
-            function checkAuthentication() {
-                showDebug('Checking authentication status...');
-                
-                // Check if we have stored authentication data
-                const participantId = localStorage.getItem('participantId');
-                const participantProfile = localStorage.getItem('participantProfile');
-                
-                if (participantId && participantProfile) {
-                    try {
-                        const profile = JSON.parse(participantProfile);
-                        showDebug('Found stored authentication for: ' + profile.name);
-                        updateAuthenticatedUI(profile);
-                        return;
-                    } catch (e) {
-                        showDebug('Error parsing stored profile: ' + e.message);
-                    }
-                }
-                
-                // Try server authentication if tracking communication is available
-                if (participantId && window.trackingCommunication) {
-                    showDebug('Attempting server authentication...');
-                    window.trackingCommunication.setAuthenticationCallback(function(success, role, profile) {
-                        if (success && profile) {
-                            showDebug('Server authentication successful');
-                            updateAuthenticatedUI(profile);
-                        } else {
-                            showDebug('Server authentication failed');
-                            showUnauthenticatedUI();
-                        }
-                    });
-                    
-                    window.trackingCommunication.authenticateParticipant(participantId);
-                } else {
-                    showDebug('No authentication data found');
-                    showUnauthenticatedUI();
-                }
-            }
-            
-            // Update UI for authenticated user
-            function updateAuthenticatedUI(profile) {
-                // Hide login form and show status indicators
-                document.getElementById('login-form').style.display = 'none';
-                document.getElementById('status-indicators').style.display = 'block';
-                
-                // Update profile screens
-                document.getElementById('profile-not-authenticated').style.display = 'none';
-                document.getElementById('profile-authenticated').style.display = 'block';
-                document.getElementById('settings-not-authenticated').style.display = 'none';
-                document.getElementById('settings-authenticated').style.display = 'block';
-                
-                // Update profile information
-                document.getElementById('profile-name').textContent = profile.name || 'Zawodnik ' + profile.sailNumber;
-                document.getElementById('profile-sail').textContent = profile.sailNumber;
-                document.getElementById('settings-sail-number').textContent = profile.sailNumber;
-                
-                // Set avatar
-                const sailNumber = profile.sailNumber || 'POL-000';
-                const initials = sailNumber.replace('POL-', '').substring(0, 2);
-                document.getElementById('profile-avatar').textContent = initials;
-                document.getElementById('profile-avatar').style.backgroundColor = profile.trackingColor || '#1a73e8';
-                
-                showDebug('UI updated for authenticated user: ' + profile.name);
-            }
-            
-            // Show unauthenticated UI
-            function showUnauthenticatedUI() {
-                // Show login form and hide status indicators
-                document.getElementById('login-form').style.display = 'block';
-                document.getElementById('status-indicators').style.display = 'none';
-                
-                // Update profile screens
-                document.getElementById('profile-not-authenticated').style.display = 'block';
-                document.getElementById('profile-authenticated').style.display = 'none';
-                document.getElementById('settings-not-authenticated').style.display = 'block';
-                document.getElementById('settings-authenticated').style.display = 'none';
-                
-                showDebug('Showing unauthenticated UI');
-            }
-            
-            // Logout function
-            function logout() {
-                showDebug('Logging out...');
-                
-                // Clear stored data
-                localStorage.removeItem('participantId');
-                localStorage.removeItem('participantProfile');
-                
-                // Reset tracking communication if available
-                if (window.trackingCommunication) {
-                    window.trackingCommunication.participantId = null;
-                    window.trackingCommunication.participantProfile = null;
-                    window.trackingCommunication.isAuthenticated = false;
-                }
-                
-                // Show unauthenticated UI
-                showUnauthenticatedUI();
-                
-                // Go to home screen
-                showScreen('home-screen');
-                
-                showDebug('Logout complete');
-            }
-            
-            // Add event listeners for other functionality
-            const endTrackingBtn = document.getElementById('end-tracking-btn');
-            if (endTrackingBtn) {
-                endTrackingBtn.addEventListener('click', function() {
-                    showDebug('Ending tracking session');
-                    
-                    if (window.gpsTracker) {
-                        window.gpsTracker.stopTracking();
-                        showDebug('GPS tracking stopped');
-                    }
-                    
-                    if (window.trackingCommunication) {
-                        window.trackingCommunication.stopSending();
-                        showDebug('Position updates stopped');
-                    }
-                    
-                    alert('Śledzenie zakończone');
-                    showScreen('home-screen');
-                });
-            }
-            
-            const sosButton = document.getElementById('sos-btn');
-            if (sosButton) {
-                sosButton.addEventListener('click', function() {
-                    showDebug('SOS button pressed!');
-                    
-                    if (window.gpsTracker && window.trackingCommunication) {
-                        const position = window.gpsTracker.getStatus().currentPosition;
-                        window.trackingCommunication.sendSOS(position);
-                        showDebug('SOS signal sent');
-                    }
-                    
-                    alert('SOS sygnał wysłany! Pomoc jest w drodze.');
-                });
+        });
+        
+        // Handle page unload (stop tracking when page is closed)
+        window.addEventListener('beforeunload', function() {
+            if (trackingActive) {
+                stopTracking();
             }
         });
     </script>
