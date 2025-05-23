@@ -404,6 +404,11 @@
                 return;
             }
             
+            // Initialize WebSocket connection
+            if (window.trackingCommunication) {
+                window.trackingCommunication.initialize();
+            }
+            
             const options = {
                 enableHighAccuracy: true,
                 timeout: 10000,
@@ -524,10 +529,23 @@
         
         // Send tracking data to server
         function sendTrackingData(data) {
+            // Convert to format expected by tracking-communication.js
+            const participantData = {
+                participantNumber: data.participantNumber,
+                position: data.position ? {
+                    latitude: data.position.lat,
+                    longitude: data.position.lng,
+                    accuracy: data.accuracy,
+                    timestamp: Date.now()
+                } : null,
+                status: data.active ? 'active' : 'inactive',
+                speed: 0
+            };
+            
             if (window.trackingCommunication) {
-                window.trackingCommunication.sendParticipantUpdate(data);
+                window.trackingCommunication.sendParticipantUpdate(participantData);
             } else {
-                console.log('Tracking data (demo mode):', data);
+                console.log('Tracking data (demo mode):', participantData);
             }
         }
         

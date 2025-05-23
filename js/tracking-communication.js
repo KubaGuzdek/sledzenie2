@@ -103,6 +103,107 @@
         }
     }
     
+    // Start sending position updates from GPS tracker
+    function startSending(gpsTracker) {
+        if (!gpsTracker) {
+            console.error('GPS tracker not provided to startSending');
+            return;
+        }
+        
+        // Store reference to GPS tracker
+        window.currentGPSTracker = gpsTracker;
+        
+        // Get participant number from localStorage or URL
+        const participantNumber = localStorage.getItem('participantNumber') || 
+                                 new URLSearchParams(window.location.search).get('participant') ||
+                                 Math.floor(Math.random() * 200) + 1;
+        
+        console.log('Started sending for participant #' + participantNumber);
+        
+        // Set up position update callback to send data to organizer
+        const originalCallback = gpsTracker.onPositionUpdate;
+        gpsTracker.onPositionUpdate = function(position) {
+            // Call original callback first
+            if (originalCallback) {
+                originalCallback(position);
+            }
+            
+            // Send update to organizer
+            const participantData = {
+                participantNumber: parseInt(participantNumber),
+                position: {
+                    latitude: position.latitude,
+                    longitude: position.longitude,
+                    accuracy: position.accuracy,
+                    timestamp: position.timestamp
+                },
+                status: 'active',
+                speed: position.speed || 0
+            };
+            
+            sendParticipantUpdate(participantData);
+        };
+        
+        // Initialize connection if not already connected
+        if (!socket) {
+            initializeConnection();
+        }
+    }
+    
+    // Stop sending position updates
+    function stopSending() {
+        if (window.currentGPSTracker) {
+            // Get participant number
+            const participantNumber = localStorage.getItem('participantNumber') || 
+                                     new URLSearchParams(window.location.search).get('participant') ||
+                                     1;
+            
+            // Send final update with inactive status
+            const participantData = {
+                participantNumber: parseInt(participantNumber),
+                position: window.currentGPSTracker.currentPosition,
+                status: 'inactive',
+                speed: 0
+            };
+            
+            sendParticipantUpdate(participantData);
+            console.log('Stopped sending for participant #' + participantNumber);
+        }
+        
+        // Clear reference
+        window.currentGPSTracker = null;
+    }
+    
+    // Send SOS signal
+    function sendSOS(position) {
+        const participantNumber = localStorage.getItem('participantNumber') || 
+                                 new URLSearchParams(window.location.search).get('participant') ||
+                                 1;
+        
+        const sosData = {
+            participantNumber: parseInt(participantNumber),
+            position: position,
+            status: 'sos',
+            timestamp: Date.now()
+        };
+        
+        const message = {
+            type: 'sosAlert',
+            payload: sosData
+        };
+        
+        if (isConnected && socket) {
+            try {
+                socket.send(JSON.stringify(message));
+                console.log('Sent SOS alert:', sosData);
+            } catch (error) {
+                console.error('Error sending SOS alert:', error);
+            }
+        } else {
+            console.log('WebSocket not connected, SOS alert:', sosData);
+        }
+    }
+    
     // Set callback for participant updates (used by organizer)
     function setParticipantUpdateCallback(callback) {
         participantUpdateCallback = callback;
@@ -142,6 +243,11 @@
         sendParticipantUpdate: sendParticipantUpdate,
         setParticipantUpdateCallback: setParticipantUpdateCallback,
         getConnectionStatus: getConnectionStatus,
+        
+        // GPS tracker integration
+        startSending: startSending,
+        stopSending: stopSending,
+        sendSOS: sendSOS,
         
         // Initialize connection manually if needed
         initialize: initializeConnection
