@@ -66,11 +66,26 @@ function handleParticipantUpdate(participantData) {
         return;
     }
     
+    // Convert position format if needed (from {latitude, longitude} to {lat, lng})
+    let convertedPosition = null;
+    if (participantData.position) {
+        if (participantData.position.latitude !== undefined && participantData.position.longitude !== undefined) {
+            // Convert from {latitude, longitude} to {lat, lng}
+            convertedPosition = {
+                lat: participantData.position.latitude,
+                lng: participantData.position.longitude
+            };
+        } else {
+            // Already in {lat, lng} format
+            convertedPosition = participantData.position;
+        }
+    }
+    
     // Update participant data
     participants.set(participantNumber, {
         number: participantNumber,
         active: participantData.active,
-        position: participantData.position,
+        position: convertedPosition,
         accuracy: participantData.accuracy,
         lastUpdate: participantData.timestamp || new Date().toISOString()
     });
@@ -78,14 +93,23 @@ function handleParticipantUpdate(participantData) {
     console.log(`Updated participant #${participantNumber}:`, {
         active: participantData.active,
         position: participantData.position ? 
-            `${participantData.position.lat.toFixed(6)}, ${participantData.position.lng.toFixed(6)}` : 
+            (participantData.position.lat !== undefined ? 
+                `${participantData.position.lat.toFixed(6)}, ${participantData.position.lng.toFixed(6)}` :
+                `${participantData.position.latitude.toFixed(6)}, ${participantData.position.longitude.toFixed(6)}`) : 
             'none'
     });
     
-    // Broadcast update to all connected organizer clients
+    // Broadcast update to all connected organizer clients with converted position
     broadcastToOrganizers({
         type: 'participantUpdate',
-        payload: participantData
+        payload: {
+            participantNumber: participantNumber,
+            status: participantData.status || (participantData.active ? 'active' : 'inactive'),
+            active: participantData.active,
+            position: convertedPosition,
+            accuracy: participantData.accuracy,
+            timestamp: participantData.timestamp || new Date().toISOString()
+        }
     });
 }
 
