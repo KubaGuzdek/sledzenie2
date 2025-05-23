@@ -402,14 +402,34 @@
         
         // Update participant data
         function updateParticipant(data) {
+            console.log('Received participant update:', data);
+            
             const number = parseInt(data.participantNumber);
             if (number >= 1 && number <= 200) {
                 const participant = participants[number];
                 
-                // Update participant data
-                participant.active = data.active || false;
-                participant.position = data.position || null;
-                participant.lastUpdate = data.timestamp || new Date().toISOString();
+                // Update participant data - handle both old and new format
+                participant.active = data.status === 'active' || data.active || false;
+                
+                // Convert position format if needed
+                if (data.position) {
+                    if (data.position.latitude !== undefined && data.position.longitude !== undefined) {
+                        // New format: {latitude, longitude}
+                        participant.position = {
+                            lat: data.position.latitude,
+                            lng: data.position.longitude
+                        };
+                    } else if (data.position.lat !== undefined && data.position.lng !== undefined) {
+                        // Old format: {lat, lng}
+                        participant.position = data.position;
+                    }
+                } else {
+                    participant.position = null;
+                }
+                
+                participant.lastUpdate = data.timestamp || Date.now();
+                
+                console.log(`Updated participant #${number}:`, participant);
                 
                 // Update UI
                 updateParticipantUI(number);
