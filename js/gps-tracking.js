@@ -63,11 +63,21 @@ class GPSTracker {
                 
                 // Start sending position updates to organizer view
                 if (window.trackingCommunication) {
-                    window.trackingCommunication.startSending(this);
-                    
-                    if (window.showDebug) {
-                        window.showDebug('Connected to tracking communication module');
-                        window.showDebug(`Initial position: ${position.latitude.toFixed(6)}, ${position.longitude.toFixed(6)}`);
+                    // Get participant number from localStorage
+                    const participantNumber = localStorage.getItem('participantNumber');
+                    if (participantNumber) {
+                        window.trackingCommunication.startSending(parseInt(participantNumber));
+                        
+                        if (window.showDebug) {
+                            window.showDebug('Connected to tracking communication module');
+                            window.showDebug(`Participant #${participantNumber} started sending updates`);
+                            window.showDebug(`Initial position: ${position.latitude.toFixed(6)}, ${position.longitude.toFixed(6)}`);
+                        }
+                    } else {
+                        if (window.showDebug) {
+                            window.showDebug('WARNING: No participant number found in localStorage');
+                        }
+                        console.warn('No participant number found in localStorage');
                     }
                 } else {
                     if (window.showDebug) {
