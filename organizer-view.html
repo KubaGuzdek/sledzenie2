@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <style>
         /* Specific styles for organizer view */
         body {
@@ -464,6 +466,12 @@
         <div class="organizer-content">
             <div class="participants-list">
                 <input type="text" class="search-box" placeholder="Szukaj zawodnika..." id="participant-search">
+                
+                <div style="margin-bottom: 20px;">
+                    <button class="btn btn-primary" id="add-participant-btn" style="width: 100%; padding: 12px; background-color: #4caf50; color: white; border: none; border-radius: 4px; font-weight: 600; cursor: pointer;">
+                        <i class="fas fa-user-plus"></i> Dodaj zawodnika
+                    </button>
+                </div>
                 
                 <div class="filter-tabs">
                     <div class="filter-tab active" data-filter="all">Wszyscy (<span id="count-all">0</span>)</div>
@@ -1193,20 +1201,68 @@
                 });
             }
             
-            // Show debug panel button
-            const organizerActions = document.querySelector('.organizer-actions');
-            if (organizerActions) {
-                const debugBtn = document.createElement('button');
-                debugBtn.className = 'organizer-btn';
-                debugBtn.style.backgroundColor = '#f8f9fa';
-                debugBtn.style.color = '#333';
-                debugBtn.innerHTML = '<i class="fas fa-bug"></i> Debug';
-                debugBtn.addEventListener('click', function() {
-                    document.getElementById('debug-panel').style.display = 'block';
-                    showDebug('Debug panel opened manually');
+                // Add participant button
+                document.getElementById('add-participant-btn').addEventListener('click', function() {
+                    const sailNumber = prompt('Podaj numer żagla nowego zawodnika (np. POL-123):');
+                    if (sailNumber && sailNumber.trim()) {
+                        addNewParticipant(sailNumber.trim());
+                    }
                 });
-                organizerActions.appendChild(debugBtn);
+                
+                // Show debug panel button
+                const organizerActions = document.querySelector('.organizer-actions');
+                if (organizerActions) {
+                    const debugBtn = document.createElement('button');
+                    debugBtn.className = 'organizer-btn';
+                    debugBtn.style.backgroundColor = '#f8f9fa';
+                    debugBtn.style.color = '#333';
+                    debugBtn.innerHTML = '<i class="fas fa-bug"></i> Debug';
+                    debugBtn.addEventListener('click', function() {
+                        document.getElementById('debug-panel').style.display = 'block';
+                        showDebug('Debug panel opened manually');
+                    });
+                    organizerActions.appendChild(debugBtn);
+                }
             }
+            
+            // Add new participant function
+            function addNewParticipant(sailNumber) {
+                showDebug(`Adding new participant with sail number: ${sailNumber}`);
+                
+                // Create new participant object
+                const newParticipant = {
+                    id: 'p' + Date.now(),
+                    name: 'Zawodnik ' + sailNumber,
+                    sailNumber: sailNumber,
+                    status: 'waiting',
+                    position: null,
+                    distance: 0,
+                    speed: 0,
+                    lastUpdate: null,
+                    phone: '',
+                    emergencyContact: '',
+                    trackingColor: getRandomColor()
+                };
+                
+                // Add to demo participants list (in a real app, this would be sent to the server)
+                const container = document.getElementById('participants-container');
+                const newItem = createParticipantItem(newParticipant);
+                container.appendChild(newItem);
+                
+                // Update counters
+                const countAll = document.getElementById('count-all');
+                const countWaiting = document.getElementById('count-waiting');
+                countAll.textContent = parseInt(countAll.textContent) + 1;
+                countWaiting.textContent = parseInt(countWaiting.textContent) + 1;
+                
+                showDebug(`Participant ${sailNumber} added successfully`);
+                alert(`Zawodnik ${sailNumber} został dodany do listy!`);
+            }
+            
+            // Get random color for new participants
+            function getRandomColor() {
+                const colors = ['#1a73e8', '#4caf50', '#f44336', '#ff9800', '#9c27b0', '#795548', '#607d8b'];
+                return colors[Math.floor(Math.random() * colors.length)];
             
             // Show initial debug info
             showDebug('Organizer view loaded');

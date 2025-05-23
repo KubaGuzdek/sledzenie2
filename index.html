@@ -7,14 +7,13 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 </head>
 <body>
     <div class="app-container">
         <a href="organizer-view.html" style="position: fixed; top: 10px; right: 10px; background-color: #1a73e8; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; z-index: 1000;">
             <i class="fas fa-users-cog"></i> Panel Organizatora
-        </a>
-        <a href="register.html" style="position: fixed; top: 10px; right: 150px; background-color: #4caf50; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 12px; z-index: 1000;">
-            <i class="fas fa-user-plus"></i> Rejestracja
         </a>
         <!-- Main container that holds all screens -->
         <div id="app" class="mobile-container">
@@ -30,23 +29,43 @@
                 </header>
                 
                 <div class="content">
-                    <div class="status-indicator">
-                        <i class="fas fa-satellite-dish status-icon status-good"></i>
-                        <div class="status-text">Sygnał GPS: Dobry</div>
+                    <!-- Login form for participants -->
+                    <div id="login-form" style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                        <h2 style="margin-top: 0; color: #333; text-align: center;">Zaloguj się</h2>
+                        <p style="text-align: center; color: #666; margin-bottom: 20px;">Wpisz swój numer żagla, aby rozpocząć śledzenie</p>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="sail-number-login">Numer żagla</label>
+                            <input type="text" id="sail-number-login" class="form-input" placeholder="np. POL-123" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px;">
+                        </div>
+                        
+                        <div id="login-error" style="color: #f44336; margin-bottom: 15px; display: none; text-align: center;"></div>
+                        
+                        <button type="button" class="btn btn-primary" id="login-btn" style="width: 100%;">
+                            <i class="fas fa-sign-in-alt"></i> Zaloguj się
+                        </button>
                     </div>
                     
-                    <button class="btn btn-primary" onclick="showScreen('map-screen')">
-                        <i class="fas fa-play-circle"></i> Rozpocznij śledzenie
-                    </button>
-                    
-                    <div class="status-indicator">
-                        <i class="fas fa-battery-three-quarters status-icon status-good"></i>
-                        <div class="status-text">Bateria: 85%</div>
-                    </div>
-                    
-                    <div class="status-indicator">
-                        <i class="fas fa-signal status-icon status-good"></i>
-                        <div class="status-text">Sygnał sieci: Dobry</div>
+                    <!-- Status indicators (hidden until logged in) -->
+                    <div id="status-indicators" style="display: none;">
+                        <div class="status-indicator">
+                            <i class="fas fa-satellite-dish status-icon status-good"></i>
+                            <div class="status-text">Sygnał GPS: Dobry</div>
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="showScreen('map-screen')">
+                            <i class="fas fa-play-circle"></i> Rozpocznij śledzenie
+                        </button>
+                        
+                        <div class="status-indicator">
+                            <i class="fas fa-battery-three-quarters status-icon status-good"></i>
+                            <div class="status-text">Bateria: 85%</div>
+                        </div>
+                        
+                        <div class="status-indicator">
+                            <i class="fas fa-signal status-icon status-good"></i>
+                            <div class="status-text">Sygnał sieci: Dobry</div>
+                        </div>
                     </div>
                 </div>
                 
@@ -200,58 +219,38 @@
                     <div id="profile-not-authenticated" style="text-align: center; padding: 20px;">
                         <i class="fas fa-user-circle" style="font-size: 64px; color: #ccc; margin-bottom: 20px;"></i>
                         <h2>Nie jesteś zalogowany</h2>
-                        <p>Aby korzystać z aplikacji, musisz się zarejestrować jako zawodnik.</p>
-                        <a href="register.html" class="btn btn-primary" style="text-decoration: none; margin-top: 20px;">
-                            <i class="fas fa-user-plus"></i> Zarejestruj się
-                        </a>
+                        <p>Aby zobaczyć profil, zaloguj się podając numer żagla na stronie głównej.</p>
+                        <button class="btn btn-primary" onclick="showScreen('home-screen')" style="margin-top: 20px;">
+                            <i class="fas fa-sign-in-alt"></i> Przejdź do logowania
+                        </button>
                     </div>
                     
                     <div id="profile-authenticated" style="display: none;">
                         <div style="text-align: center; margin-bottom: 20px;">
                             <div style="width: 100px; height: 100px; border-radius: 50%; background-color: #1a73e8; margin: 0 auto; display: flex; justify-content: center; align-items: center; color: white; font-size: 48px;" id="profile-avatar">
-                                JK
+                                ?
                             </div>
-                            <h2 id="profile-name" style="margin-top: 10px;">Jan Kowalski</h2>
-                            <div id="profile-sail" style="background-color: #1a73e8; color: white; padding: 5px 10px; border-radius: 4px; display: inline-block; margin-top: 5px;">POL-123</div>
-                        </div>
-                        
-                        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                            <h3 style="margin-top: 0; color: #333; font-size: 16px;">Dane kontaktowe</h3>
-                            <div style="display: flex; margin-bottom: 10px;">
-                                <div style="width: 30px; color: #666;"><i class="fas fa-envelope"></i></div>
-                                <div id="profile-email">jan.kowalski@example.com</div>
-                            </div>
-                            <div style="display: flex; margin-bottom: 10px;">
-                                <div style="width: 30px; color: #666;"><i class="fas fa-phone"></i></div>
-                                <div id="profile-phone">+48 123 456 789</div>
-                            </div>
-                            <div style="display: flex;">
-                                <div style="width: 30px; color: #666;"><i class="fas fa-exclamation-circle"></i></div>
-                                <div id="profile-emergency">Anna Kowalska +48 987 654 321</div>
-                            </div>
+                            <h2 id="profile-name" style="margin-top: 10px;">Zawodnik</h2>
+                            <div id="profile-sail" style="background-color: #1a73e8; color: white; padding: 5px 10px; border-radius: 4px; display: inline-block; margin-top: 5px;">POL-000</div>
                         </div>
                         
                         <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
                             <h3 style="margin-top: 0; color: #333; font-size: 16px;">Statystyki</h3>
                             <div style="display: flex; justify-content: space-between; text-align: center;">
                                 <div>
-                                    <div style="font-size: 24px; font-weight: 700; color: #1a73e8;">3</div>
+                                    <div style="font-size: 24px; font-weight: 700; color: #1a73e8;">0</div>
                                     <div style="color: #666; font-size: 14px;">Wyścigi</div>
                                 </div>
                                 <div>
-                                    <div style="font-size: 24px; font-weight: 700; color: #1a73e8;">2</div>
+                                    <div style="font-size: 24px; font-weight: 700; color: #1a73e8;">0</div>
                                     <div style="color: #666; font-size: 14px;">Podium</div>
                                 </div>
                                 <div>
-                                    <div style="font-size: 24px; font-weight: 700; color: #1a73e8;">12.4</div>
+                                    <div style="font-size: 24px; font-weight: 700; color: #1a73e8;">0.0</div>
                                     <div style="color: #666; font-size: 14px;">km</div>
                                 </div>
                             </div>
                         </div>
-                        
-                        <button class="btn btn-primary" onclick="showScreen('settings-screen')">
-                            <i class="fas fa-edit"></i> Edytuj profil
-                        </button>
                         
                         <button class="btn" style="background-color: #f44336; color: white; margin-top: 10px;" id="logout-btn">
                             <i class="fas fa-sign-out-alt"></i> Wyloguj się
@@ -296,60 +295,16 @@
                     <div id="settings-not-authenticated" style="text-align: center; padding: 20px;">
                         <i class="fas fa-user-circle" style="font-size: 64px; color: #ccc; margin-bottom: 20px;"></i>
                         <h2>Nie jesteś zalogowany</h2>
-                        <p>Aby edytować ustawienia, musisz się zarejestrować jako zawodnik.</p>
-                        <a href="register.html" class="btn btn-primary" style="text-decoration: none; margin-top: 20px;">
-                            <i class="fas fa-user-plus"></i> Zarejestruj się
-                        </a>
+                        <p>Aby edytować ustawienia, zaloguj się podając numer żagla na stronie głównej.</p>
+                        <button class="btn btn-primary" onclick="showScreen('home-screen')" style="margin-top: 20px;">
+                            <i class="fas fa-sign-in-alt"></i> Przejdź do logowania
+                        </button>
                     </div>
                     
-                    <form id="settings-form" style="display: none;">
-                        <div class="form-group">
-                            <label class="form-label" for="name">Imię i nazwisko</label>
-                            <input type="text" id="name" class="form-input" placeholder="Jan Kowalski">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="sail-number">Numer żagla</label>
-                            <input type="text" id="sail-number" class="form-input" placeholder="POL-123">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="email">Email</label>
-                            <input type="email" id="email" class="form-input" placeholder="jan.kowalski@example.com">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="phone">Telefon</label>
-                            <input type="tel" id="phone" class="form-input" placeholder="+48 123 456 789">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="emergency-contact">Kontakt awaryjny</label>
-                            <input type="text" id="emergency-contact" class="form-input" placeholder="Anna Kowalska +48 987 654 321">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Kolor śledzenia</label>
-                            <div class="color-options">
-                                <div class="color-option" style="background-color: #1a73e8;" data-color="#1a73e8"></div>
-                                <div class="color-option" style="background-color: #4caf50;" data-color="#4caf50"></div>
-                                <div class="color-option" style="background-color: #f44336;" data-color="#f44336"></div>
-                                <div class="color-option" style="background-color: #ff9800;" data-color="#ff9800"></div>
-                                <div class="color-option" style="background-color: #9c27b0;" data-color="#9c27b0"></div>
-                            </div>
-                            <input type="hidden" id="tracking-color" value="#1a73e8">
-                        </div>
-                        
-                        <div id="settings-error" style="color: #f44336; margin-bottom: 15px; display: none;"></div>
-                        
-                        <button type="button" class="btn btn-primary" id="save-settings-btn">
-                            <i class="fas fa-save"></i> Zapisz ustawienia
-                        </button>
-                        
-                        <button type="button" class="btn" style="background-color: #f8f9fa; color: #333; margin-top: 10px;" onclick="showScreen('profile-screen')">
-                            <i class="fas fa-arrow-left"></i> Anuluj
-                        </button>
-                    </form>
+                    <div id="settings-authenticated" style="display: none;">
+                        <p style="text-align: center; color: #666;">Ustawienia są zarządzane przez organizatora.</p>
+                        <p style="text-align: center; color: #666;">Twój numer żagla: <strong id="settings-sail-number">POL-000</strong></p>
+                    </div>
                 </div>
                 
                 <nav class="nav-bar">
@@ -369,9 +324,9 @@
                         <i class="fas fa-trophy nav-icon"></i>
                         <span>Wyniki</span>
                     </a>
-                    <a href="#" class="nav-item" onclick="showScreen('profile-screen')">
-                        <i class="fas fa-user nav-icon"></i>
-                        <span>Profil</span>
+                    <a href="#" class="nav-item active" onclick="showScreen('settings-screen')">
+                        <i class="fas fa-cog nav-icon"></i>
+                        <span>Ustawienia</span>
                     </a>
                 </nav>
             </div>
@@ -389,10 +344,10 @@
                     <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
                         <h2 style="margin: 0; color: #1a73e8; font-size: 18px;">Twoja pozycja</h2>
                         <div style="display: flex; align-items: center; justify-content: center; margin-top: 10px;">
-                            <div style="font-size: 48px; font-weight: 700; color: #1a73e8;">3</div>
+                            <div style="font-size: 48px; font-weight: 700; color: #1a73e8;">-</div>
                             <div style="margin-left: 10px; text-align: left;">
                                 <div style="font-weight: 500;">miejsce</div>
-                                <div style="color: #666; font-size: 14px;">z 12 zawodników</div>
+                                <div style="color: #666; font-size: 14px;">Brak danych</div>
                             </div>
                         </div>
                     </div>
@@ -406,45 +361,10 @@
                                 <div style="flex: 0 0 80px; text-align: right;">Czas</div>
                             </div>
                             
-                            <div style="display: flex; padding: 12px 15px; border-bottom: 1px solid #eee; background-color: #f0f7ff;">
-                                <div style="flex: 0 0 40px; font-weight: 700; color: gold;">1</div>
-                                <div style="flex: 1;">Anna Nowak (POL-456)</div>
-                                <div style="flex: 0 0 80px; text-align: right;">38:12</div>
-                            </div>
-                            
-                            <div style="display: flex; padding: 12px 15px; border-bottom: 1px solid #eee;">
-                                <div style="flex: 0 0 40px; font-weight: 700; color: silver;">2</div>
-                                <div style="flex: 1;">Piotr Wiśniewski (POL-789)</div>
-                                <div style="flex: 0 0 80px; text-align: right;">39:45</div>
-                            </div>
-                            
-                            <div style="display: flex; padding: 12px 15px; border-bottom: 1px solid #eee; background-color: rgba(26, 115, 232, 0.1);">
-                                <div style="flex: 0 0 40px; font-weight: 700; color: #cd7f32;">3</div>
-                                <div style="flex: 1;">Jan Kowalski (POL-123)</div>
-                                <div style="flex: 0 0 80px; text-align: right;">41:20</div>
-                            </div>
-                            
-                            <div style="display: flex; padding: 12px 15px; border-bottom: 1px solid #eee;">
-                                <div style="flex: 0 0 40px;">4</div>
-                                <div style="flex: 1;">Tomasz Lewandowski (POL-567)</div>
-                                <div style="flex: 0 0 80px; text-align: right;">42:08</div>
-                            </div>
-                            
-                            <div style="display: flex; padding: 12px 15px;">
-                                <div style="flex: 0 0 40px;">5</div>
-                                <div style="flex: 1;">Katarzyna Dąbrowska (POL-234)</div>
-                                <div style="flex: 0 0 80px; text-align: right;">43:51</div>
+                            <div style="padding: 20px; text-align: center; color: #666;">
+                                Brak wyników do wyświetlenia
                             </div>
                         </div>
-                    </div>
-                    
-                    <div style="display: flex; gap: 10px;">
-                        <button class="btn btn-primary" style="flex: 1;">
-                            <i class="fas fa-share-alt"></i> Udostępnij wyniki
-                        </button>
-                        <button class="btn" style="flex: 1; background-color: #f8f9fa; color: #333;">
-                            <i class="fas fa-history"></i> Poprzednie wyścigi
-                        </button>
                     </div>
                 </div>
                 
@@ -462,79 +382,6 @@
                         <span>Start</span>
                     </a>
                     <a href="#" class="nav-item active" onclick="showScreen('results-screen')">
-                        <i class="fas fa-trophy nav-icon"></i>
-                        <span>Wyniki</span>
-                    </a>
-                    <a href="#" class="nav-item" onclick="showScreen('settings-screen')">
-                        <i class="fas fa-cog nav-icon"></i>
-                        <span>Ustawienia</span>
-                    </a>
-                </nav>
-            </div>
-            
-            <!-- SUMMARY SCREEN -->
-            <div id="summary-screen" class="screen">
-                <header class="app-header" style="background-color: white; color: #1a73e8; border-bottom: 1px solid rgba(0, 0, 0, 0.1);">
-                    <div style="display: flex; align-items: center; padding: 8px 15px; border-radius: 8px;">
-                        <img src="img/logo.png" alt="Logo zawodów" class="app-logo" style="height: 60px; margin-right: 10px;">
-                        <h1 class="app-title">Podsumowanie trasy</h1>
-                    </div>
-                </header>
-                
-                <div class="content">
-                    <div class="map-container route-map">
-                        <div class="map-grid"></div>
-                        <svg class="route-path" viewBox="0 0 400 400">
-                            <path d="M80,280 C120,260 150,240 180,200 C210,160 240,140 320,120" />
-                        </svg>
-                        <div class="map-marker start-marker"></div>
-                        <div class="map-marker end-marker"></div>
-                        <div class="compass">N</div>
-                        <div class="map-label">Trasa: 8.7 km</div>
-                    </div>
-                    
-                    <div class="stats-container">
-                        <div class="stat-card">
-                            <div class="stat-value">8.7</div>
-                            <div class="stat-label">km</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">22.3</div>
-                            <div class="stat-label">km/h średnio</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">35.8</div>
-                            <div class="stat-label">km/h max</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">42</div>
-                            <div class="stat-label">min</div>
-                        </div>
-                    </div>
-                    
-                    <button class="btn btn-primary" onclick="showScreen('home-screen')">
-                        <i class="fas fa-share-alt"></i> Udostępnij wyniki
-                    </button>
-                    
-                    <button class="btn btn-success" onclick="showScreen('home-screen')">
-                        <i class="fas fa-home"></i> Powrót do ekranu głównego
-                    </button>
-                </div>
-                
-                <nav class="nav-bar">
-                    <a href="#" class="nav-item" onclick="showScreen('home-screen')">
-                        <i class="fas fa-home nav-icon"></i>
-                        <span>Start</span>
-                    </a>
-                    <a href="#" class="nav-item" onclick="showScreen('map-screen')">
-                        <i class="fas fa-map-marked-alt nav-icon"></i>
-                        <span>Mapa</span>
-                    </a>
-                    <a href="#" class="nav-item" onclick="showScreen('ready-screen')">
-                        <i class="fas fa-flag-checkered nav-icon"></i>
-                        <span>Start</span>
-                    </a>
-                    <a href="#" class="nav-item" onclick="showScreen('results-screen')">
                         <i class="fas fa-trophy nav-icon"></i>
                         <span>Wyniki</span>
                     </a>
@@ -602,6 +449,7 @@
             // Show server connection info
             showDebug('Attempting to connect to server...');
         });
+        
         // Simple function to switch between screens
         function showScreen(screenId) {
             showDebug('Switching to screen: ' + screenId);
@@ -629,36 +477,21 @@
         
         // Initialize app functionality
         document.addEventListener('DOMContentLoaded', function() {
-            // Check if user is authenticated
-            checkAuthentication();
-            
-            // Set up color picker
-            const colorOptions = document.querySelectorAll('.color-option');
-            colorOptions.forEach(option => {
-                option.addEventListener('click', function() {
-                    // Remove selected class from all options
-                    colorOptions.forEach(opt => opt.classList.remove('selected'));
-                    // Add selected class to clicked option
-                    this.classList.add('selected');
-                    
-                    // Store the selected color
-                    const selectedColor = this.getAttribute('data-color');
-                    document.getElementById('tracking-color').value = selectedColor;
-                    console.log('Selected color:', selectedColor);
-                    
-                    // Update route color in the map
-                    const routePaths = document.querySelectorAll('.route-path path');
-                    routePaths.forEach(path => {
-                        path.style.stroke = selectedColor;
-                    });
+            // Set up login form
+            const loginBtn = document.getElementById('login-btn');
+            if (loginBtn) {
+                loginBtn.addEventListener('click', function() {
+                    handleLogin();
                 });
-            });
+            }
             
-            // Save settings button
-            const saveSettingsBtn = document.getElementById('save-settings-btn');
-            if (saveSettingsBtn) {
-                saveSettingsBtn.addEventListener('click', function() {
-                    saveSettings();
+            // Allow Enter key to submit login
+            const sailNumberInput = document.getElementById('sail-number-login');
+            if (sailNumberInput) {
+                sailNumberInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        handleLogin();
+                    }
                 });
             }
             
@@ -670,170 +503,149 @@
                 });
             }
             
+            // Check if user is already authenticated
+            checkAuthentication();
+            
+            // Handle login
+            function handleLogin() {
+                const sailNumber = document.getElementById('sail-number-login').value.trim();
+                const loginError = document.getElementById('login-error');
+                
+                // Clear previous errors
+                loginError.style.display = 'none';
+                
+                // Validate input
+                if (!sailNumber) {
+                    loginError.textContent = 'Proszę wpisać numer żagla';
+                    loginError.style.display = 'block';
+                    return;
+                }
+                
+                showDebug('Attempting login with sail number: ' + sailNumber);
+                
+                // Try to authenticate with the server
+                if (window.trackingCommunication) {
+                    // Set authentication callback
+                    window.trackingCommunication.setAuthenticationCallback(function(success, role, profile, errorMessage) {
+                        if (success && profile) {
+                            showDebug('Login successful for: ' + profile.name);
+                            updateAuthenticatedUI(profile);
+                        } else {
+                            showDebug('Login failed: ' + (errorMessage || 'Unknown error'));
+                            loginError.textContent = errorMessage || 'Nie znaleziono zawodnika o tym numerze żagla';
+                            loginError.style.display = 'block';
+                        }
+                    });
+                    
+                    // Authenticate with sail number as participant ID
+                    window.trackingCommunication.authenticateParticipant(sailNumber);
+                } else {
+                    // Fallback - create a simple profile
+                    showDebug('No tracking communication available, using fallback');
+                    const profile = {
+                        id: sailNumber,
+                        name: 'Zawodnik ' + sailNumber,
+                        sailNumber: sailNumber,
+                        trackingColor: '#1a73e8'
+                    };
+                    
+                    // Store in localStorage
+                    localStorage.setItem('participantId', sailNumber);
+                    localStorage.setItem('participantProfile', JSON.stringify(profile));
+                    
+                    updateAuthenticatedUI(profile);
+                }
+            }
+            
             // Check authentication status
             function checkAuthentication() {
                 showDebug('Checking authentication status...');
                 
-                if (window.trackingCommunication && window.trackingCommunication.participantProfile) {
-                    // User is authenticated
-                    showDebug('User is authenticated: ' + window.trackingCommunication.participantProfile.name);
-                    updateProfileUI(window.trackingCommunication.participantProfile);
-                } else {
-                    // Check if we have a participant ID in localStorage
-                    const participantId = localStorage.getItem('participantId');
-                    
-                    if (participantId && window.trackingCommunication) {
-                        showDebug('Found participant ID in localStorage: ' + participantId);
-                        showDebug('Attempting to authenticate...');
-                        
-                        // Set authentication callback
-                        window.trackingCommunication.setAuthenticationCallback(function(success, role, profile) {
-                            if (success && profile) {
-                                showDebug('Authentication successful');
-                                updateProfileUI(profile);
-                            } else {
-                                showDebug('Authentication failed');
-                                showUnauthenticatedUI();
-                            }
-                        });
-                        
-                        // Authenticate with saved ID
-                        window.trackingCommunication.authenticateParticipant(participantId);
-                    } else {
-                        showDebug('No authentication data found');
-                        showUnauthenticatedUI();
+                // Check if we have stored authentication data
+                const participantId = localStorage.getItem('participantId');
+                const participantProfile = localStorage.getItem('participantProfile');
+                
+                if (participantId && participantProfile) {
+                    try {
+                        const profile = JSON.parse(participantProfile);
+                        showDebug('Found stored authentication for: ' + profile.name);
+                        updateAuthenticatedUI(profile);
+                        return;
+                    } catch (e) {
+                        showDebug('Error parsing stored profile: ' + e.message);
                     }
+                }
+                
+                // Try server authentication if tracking communication is available
+                if (participantId && window.trackingCommunication) {
+                    showDebug('Attempting server authentication...');
+                    window.trackingCommunication.setAuthenticationCallback(function(success, role, profile) {
+                        if (success && profile) {
+                            showDebug('Server authentication successful');
+                            updateAuthenticatedUI(profile);
+                        } else {
+                            showDebug('Server authentication failed');
+                            showUnauthenticatedUI();
+                        }
+                    });
+                    
+                    window.trackingCommunication.authenticateParticipant(participantId);
+                } else {
+                    showDebug('No authentication data found');
+                    showUnauthenticatedUI();
                 }
             }
             
-            // Update profile UI with participant data
-            function updateProfileUI(profile) {
-                // Show authenticated UI
+            // Update UI for authenticated user
+            function updateAuthenticatedUI(profile) {
+                // Hide login form and show status indicators
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('status-indicators').style.display = 'block';
+                
+                // Update profile screens
                 document.getElementById('profile-not-authenticated').style.display = 'none';
                 document.getElementById('profile-authenticated').style.display = 'block';
                 document.getElementById('settings-not-authenticated').style.display = 'none';
-                document.getElementById('settings-form').style.display = 'block';
+                document.getElementById('settings-authenticated').style.display = 'block';
                 
-                // Update profile screen
-                document.getElementById('profile-name').textContent = profile.name;
+                // Update profile information
+                document.getElementById('profile-name').textContent = profile.name || 'Zawodnik ' + profile.sailNumber;
                 document.getElementById('profile-sail').textContent = profile.sailNumber;
-                document.getElementById('profile-email').textContent = profile.email || 'Nie podano';
-                document.getElementById('profile-phone').textContent = profile.phone || 'Nie podano';
-                document.getElementById('profile-emergency').textContent = profile.emergencyContact || 'Nie podano';
+                document.getElementById('settings-sail-number').textContent = profile.sailNumber;
                 
-                // Set avatar initials
-                const nameParts = profile.name.split(' ');
-                let initials = '';
-                if (nameParts.length >= 2) {
-                    initials = nameParts[0].charAt(0) + nameParts[1].charAt(0);
-                } else {
-                    initials = nameParts[0].charAt(0);
-                }
-                document.getElementById('profile-avatar').textContent = initials.toUpperCase();
+                // Set avatar
+                const sailNumber = profile.sailNumber || 'POL-000';
+                const initials = sailNumber.replace('POL-', '').substring(0, 2);
+                document.getElementById('profile-avatar').textContent = initials;
                 document.getElementById('profile-avatar').style.backgroundColor = profile.trackingColor || '#1a73e8';
                 
-                // Update settings form
-                document.getElementById('name').value = profile.name;
-                document.getElementById('sail-number').value = profile.sailNumber;
-                document.getElementById('email').value = profile.email || '';
-                document.getElementById('phone').value = profile.phone || '';
-                document.getElementById('emergency-contact').value = profile.emergencyContact || '';
-                document.getElementById('tracking-color').value = profile.trackingColor || '#1a73e8';
-                
-                // Select the correct color option
-                const colorOptions = document.querySelectorAll('.color-option');
-                colorOptions.forEach(option => {
-                    option.classList.remove('selected');
-                    if (option.getAttribute('data-color') === profile.trackingColor) {
-                        option.classList.add('selected');
-                    }
-                });
-                
-                showDebug('Profile UI updated with data for: ' + profile.name);
+                showDebug('UI updated for authenticated user: ' + profile.name);
             }
             
             // Show unauthenticated UI
             function showUnauthenticatedUI() {
+                // Show login form and hide status indicators
+                document.getElementById('login-form').style.display = 'block';
+                document.getElementById('status-indicators').style.display = 'none';
+                
+                // Update profile screens
                 document.getElementById('profile-not-authenticated').style.display = 'block';
                 document.getElementById('profile-authenticated').style.display = 'none';
                 document.getElementById('settings-not-authenticated').style.display = 'block';
-                document.getElementById('settings-form').style.display = 'none';
+                document.getElementById('settings-authenticated').style.display = 'none';
                 
                 showDebug('Showing unauthenticated UI');
             }
             
-            // Save settings
-            function saveSettings() {
-                showDebug('Saving settings...');
-                
-                const name = document.getElementById('name').value.trim();
-                const sailNumber = document.getElementById('sail-number').value.trim();
-                const email = document.getElementById('email').value.trim();
-                const phone = document.getElementById('phone').value.trim();
-                const emergencyContact = document.getElementById('emergency-contact').value.trim();
-                const trackingColor = document.getElementById('tracking-color').value;
-                
-                // Validate form
-                if (!name || !sailNumber) {
-                    document.getElementById('settings-error').textContent = 'Imię, nazwisko i numer żagla są wymagane.';
-                    document.getElementById('settings-error').style.display = 'block';
-                    return;
-                }
-                
-                // Create profile data
-                const profileData = {
-                    name: name,
-                    sailNumber: sailNumber,
-                    email: email,
-                    phone: phone,
-                    emergencyContact: emergencyContact,
-                    trackingColor: trackingColor
-                };
-                
-                // Update profile
-                if (window.trackingCommunication) {
-                    window.trackingCommunication.updateProfile(profileData, function(success, profile, errorMessage) {
-                        if (success) {
-                            showDebug('Profile updated successfully');
-                            updateProfileUI(profile);
-                            showScreen('profile-screen');
-                        } else {
-                            showDebug('Error updating profile: ' + errorMessage);
-                            document.getElementById('settings-error').textContent = errorMessage || 'Wystąpił błąd podczas aktualizacji profilu.';
-                            document.getElementById('settings-error').style.display = 'block';
-                        }
-                    });
-                } else {
-                    // Fallback if tracking communication is not available
-                    showDebug('Tracking communication not available, using localStorage fallback');
-                    
-                    // Store data in localStorage
-                    localStorage.setItem('userName', name);
-                    localStorage.setItem('sailNumber', sailNumber);
-                    localStorage.setItem('trackingColor', trackingColor);
-                    
-                    // Update UI
-                    const mockProfile = {
-                        name: name,
-                        sailNumber: sailNumber,
-                        email: email,
-                        phone: phone,
-                        emergencyContact: emergencyContact,
-                        trackingColor: trackingColor
-                    };
-                    updateProfileUI(mockProfile);
-                    showScreen('profile-screen');
-                }
-            }
-            
-            // Logout
+            // Logout function
             function logout() {
                 showDebug('Logging out...');
                 
-                // Clear localStorage
+                // Clear stored data
                 localStorage.removeItem('participantId');
+                localStorage.removeItem('participantProfile');
                 
-                // Reset tracking communication
+                // Reset tracking communication if available
                 if (window.trackingCommunication) {
                     window.trackingCommunication.participantId = null;
                     window.trackingCommunication.participantProfile = null;
@@ -849,108 +661,40 @@
                 showDebug('Logout complete');
             }
             
-            // Simulate countdown on ready screen
-            let countdownValue = 5;
-            let countdownInterval;
-            
-            // Function to start countdown when ready screen is shown
-            function startCountdown() {
-                const countdownElement = document.querySelector('.countdown-value');
-                if (!countdownElement) return;
-                
-                // Reset countdown
-                countdownValue = 5;
-                countdownElement.textContent = countdownValue;
-                
-                // Clear any existing interval
-                if (countdownInterval) clearInterval(countdownInterval);
-                
-                // Start new countdown
-                countdownInterval = setInterval(() => {
-                    countdownValue--;
-                    countdownElement.textContent = countdownValue;
-                    
-                    if (countdownValue <= 0) {
-                        clearInterval(countdownInterval);
-                        // Auto-navigate to map screen after countdown
-                        setTimeout(() => showScreen('map-screen'), 500);
-                    }
-                }, 1000);
-            }
-            
-            // Add event listener to ready screen button
-            const readyButton = document.querySelector('#ready-screen .btn-primary');
-            if (readyButton) {
-                readyButton.addEventListener('click', startCountdown);
-            }
-            
-            // Add event listener to SOS button
-            const sosButton = document.querySelector('.sos-button');
-            if (sosButton) {
-                console.log('SOS button found, adding event listener');
-                sosButton.addEventListener('click', function() {
-                    console.log('SOS button clicked!');
-                    showDebug('SOS button pressed! Sending emergency signal...');
-                    
-                    // If we have a GPS tracker and communication module, send the SOS
-                    if (window.gpsTracker && window.trackingCommunication) {
-                        const position = window.gpsTracker.getStatus().currentPosition;
-                        console.log('Sending SOS with position:', position);
-                        window.trackingCommunication.sendSOS(position);
-                        showDebug('SOS signal sent with position: ' + JSON.stringify(position));
-                    } else {
-                        console.error('Could not send SOS - tracking modules not initialized');
-                        showDebug('ERROR: Could not send SOS - tracking modules not initialized');
-                        if (!window.gpsTracker) console.error('gpsTracker not found');
-                        if (!window.trackingCommunication) console.error('trackingCommunication not found');
-                    }
-                    
-                    alert('SOS sygnał wysłany! Pomoc jest w drodze.');
-                });
-            } else {
-                console.error('SOS button not found in the DOM');
-            }
-            
-            // Add event listener to end tracking button
+            // Add event listeners for other functionality
             const endTrackingBtn = document.getElementById('end-tracking-btn');
             if (endTrackingBtn) {
                 endTrackingBtn.addEventListener('click', function() {
                     showDebug('Ending tracking session');
                     
-                    // Stop tracking if GPS tracker is available
                     if (window.gpsTracker) {
                         window.gpsTracker.stopTracking();
                         showDebug('GPS tracking stopped');
                     }
                     
-                    // Stop sending updates if communication module is available
                     if (window.trackingCommunication) {
                         window.trackingCommunication.stopSending();
                         showDebug('Position updates stopped');
                     }
                     
-                    showScreen('summary-screen');
+                    alert('Śledzenie zakończone');
+                    showScreen('home-screen');
                 });
             }
             
-            // Add a debug button to the home screen
-            const homeScreen = document.getElementById('home-screen');
-            if (homeScreen) {
-                const debugBtn = document.createElement('button');
-                debugBtn.className = 'btn';
-                debugBtn.style.marginTop = '20px';
-                debugBtn.style.backgroundColor = '#f8f9fa';
-                debugBtn.style.color = '#333';
-                debugBtn.innerHTML = '<i class="fas fa-bug"></i> Show Debug Info';
-                debugBtn.addEventListener('click', function() {
-                    document.getElementById('debug-panel').style.display = 'block';
-                    showDebug('Debug panel opened manually');
+            const sosButton = document.getElementById('sos-btn');
+            if (sosButton) {
+                sosButton.addEventListener('click', function() {
+                    showDebug('SOS button pressed!');
+                    
+                    if (window.gpsTracker && window.trackingCommunication) {
+                        const position = window.gpsTracker.getStatus().currentPosition;
+                        window.trackingCommunication.sendSOS(position);
+                        showDebug('SOS signal sent');
+                    }
+                    
+                    alert('SOS sygnał wysłany! Pomoc jest w drodze.');
                 });
-                
-                const content = homeScreen.querySelector('.content');
-                if (content) {
-                    content.appendChild(debugBtn);
-                }
             }
         });
     </script>

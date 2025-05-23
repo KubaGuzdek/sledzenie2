@@ -212,8 +212,20 @@ class OrganizerTracking {
     
     // Initialize map
     initializeMap() {
-        // In a real application, this would initialize a map like Google Maps or OpenStreetMap
-        // For demo purposes, we'll just use our simple map visualization
+        // Initialize Leaflet map
+        const mapElement = document.getElementById('map');
+        
+        // Clear any existing map
+        mapElement.innerHTML = '';
+        
+        // Create Leaflet map centered on Zatoka Pucka (Bay of Puck)
+        this.map = L.map('map').setView([54.6960, 18.4310], 13);
+        
+        // Add OpenStreetMap tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
+        }).addTo(this.map);
         
         // Create markers for each participant
         this.participants.forEach(participant => {
@@ -221,6 +233,8 @@ class OrganizerTracking {
                 this.createParticipantMarker(participant);
             }
         });
+        
+        showDebug('Leaflet map initialized');
     }
     
     // Create a marker for a participant
@@ -230,81 +244,88 @@ class OrganizerTracking {
             return;
         }
         
-        // In a real application, this would create a marker on a real map
-        // For demo purposes, we'll just use our simple marker elements
-        
-        // Find existing marker element or create a new one
-        let markerElement = document.querySelector(`.participant-marker[data-id="${participant.id}"]`);
-        
-        if (!markerElement) {
-            markerElement = document.createElement('div');
-            markerElement.className = 'participant-marker';
-            markerElement.setAttribute('data-id', participant.id);
-            markerElement.style.backgroundColor = participant.trackingColor;
-            
-            // Add tooltip
-            const tooltip = document.createElement('div');
-            tooltip.className = 'participant-tooltip';
-            tooltip.textContent = `${participant.name} (${participant.sailNumber})`;
-            
-            // Add SOS indicator if needed
-            if (participant.status === 'sos') {
-                markerElement.classList.add('sos');
-                tooltip.textContent += ' - SOS!';
-            }
-            
-            markerElement.appendChild(tooltip);
-            
-            // Add click event
-            markerElement.addEventListener('click', () => {
-                this.selectParticipant(participant);
-                
-                // Show SOS alert for SOS participants
-                if (participant.status === 'sos') {
-                    this.showSOSAlert(participant);
-                }
-            });
-            
-            // Add to map
-            this.mapContainer.appendChild(markerElement);
-            
-            // Create SVG path element for route tracking
-            const svgId = `route-path-${participant.id}`;
-            const existingSvg = document.getElementById(svgId);
-            
-            if (!existingSvg) {
-                const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-                svg.setAttribute("id", svgId);
-                svg.setAttribute("class", "route-path");
-                svg.setAttribute("viewBox", "0 0 100 100");
-                svg.style.position = "absolute";
-                svg.style.top = "0";
-                svg.style.left = "0";
-                svg.style.width = "100%";
-                svg.style.height = "100%";
-                svg.style.pointerEvents = "none"; // Don't interfere with clicks
-                
-                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                path.setAttribute("fill", "none");
-                path.setAttribute("stroke", participant.trackingColor);
-                path.setAttribute("stroke-width", "0.8");
-                path.setAttribute("stroke-linecap", "round");
-                path.setAttribute("stroke-linejoin", "round");
-                path.setAttribute("stroke-opacity", "0.7");
-                
-                svg.appendChild(path);
-                this.mapContainer.appendChild(svg);
-                
-                // Store path reference in participant
-                participant.routePath = path;
-            }
+        // Skip if no position data
+        if (!participant.position) {
+            return;
         }
         
-        // Store marker reference
-        this.participantMarkers[participant.id] = markerElement;
+        // Create custom icon with participant's color
+        const markerHtmlStyles = `
+            background-color: ${participant.trackingColor};
+            width: 2rem;
+            height: 2rem;
+            display: block;
+            left: -1rem;
+            top: -1rem;
+            position: relative;
+            border-radius: 3rem 3rem 0;
+            transform: rotate(45deg);
+            border: 1px solid #FFFFFF;
+            ${participant.status === 'sos' ? 'box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7); animation: pulse-danger 2s infinite;' : ''}
+        `;
         
-        // Update marker position
-        this.updateMarkerPosition(participant);
+        const icon = L.divIcon({
+            className: `participant-marker-icon ${participant.status === 'sos' ? 'sos' : ''}`,
+            iconAnchor: [12, 24],
+            html: `<span style="${markerHtmlStyles}"></span>`
+        });
+        
+        // Create marker
+        const marker = L.marker(
+            [participant.position.latitude, participant.position.longitude],
+            { icon: icon }
+        ).addTo(this.map);
+        
+        // Add popup with participant info
+        const popupContent = `
+            <div style="text-align: center; font-weight: bold;">
+                ${participant.name}<br>
+                <span style="background-color: ${participant.trackingColor}; color: white; padding: 2px 5px; border-radius: 3px;">
+                    ${participant.sailNumber}
+                </span>
+                ${participant.status === 'sos' ? '<br><span style="color: red; font-weight: bold;">SOS!</span>' : ''}
+            </div>
+            <div style="margin-top: 5px;">
+                <strong>Prędkość:</strong> ${participant.speed.toFixed(1)} km/h<br>
+                <strong>Dystans:</strong> ${participant.distance.toFixed(1)} km
+            </div>
+        `;
+        marker.bindPopup(popupContent);
+        
+        // Add click event
+        marker.on('click', () => {
+            this.selectParticipant(participant);
+            
+            // Show SOS alert for SOS participants
+            if (participant.status === 'sos') {
+                this.showSOSAlert(participant);
+            }
+        });
+        
+        // Store marker reference
+        this.participantMarkers[participant.id] = marker;
+        
+        // Create polyline for route tracking
+        const routeLine = L.polyline([], {
+            color: participant.trackingColor,
+            weight: 3,
+            opacity: 0.7,
+            lineJoin: 'round'
+        }).addTo(this.map);
+        
+        // Store route reference in participant
+        participant.routePath = routeLine;
+        
+        // Add initial point to route
+        if (participant.position) {
+            participant.positionHistory = [{
+                lat: participant.position.latitude,
+                lng: participant.position.longitude
+            }];
+            routeLine.addLatLng([participant.position.latitude, participant.position.longitude]);
+        }
+        
+        showDebug(`Created marker for ${participant.name} (${participant.sailNumber})`);
     }
     
     // Update marker position
@@ -312,19 +333,17 @@ class OrganizerTracking {
         const marker = this.participantMarkers[participant.id];
         if (!marker || !participant.position) return;
         
-        // In a real application, this would convert GPS coordinates to map coordinates
-        // For this improved version, we'll create more realistic movement patterns
-        
-        let left, top;
+        // Create a more realistic movement pattern based on participant's status and characteristics
+        let newLat, newLng;
         
         if (participant.positionHistory.length > 0) {
             const lastPosition = participant.positionHistory[participant.positionHistory.length - 1];
             
-            // Create a more realistic movement pattern based on participant's status and characteristics
+            // Create a more realistic movement pattern based on participant's status
             if (participant.status === 'sos') {
                 // SOS participants move very little or not at all
-                left = lastPosition.left + (Math.random() * 0.6 - 0.3);
-                top = lastPosition.top + (Math.random() * 0.6 - 0.3);
+                newLat = lastPosition.lat + (Math.random() * 0.0002 - 0.0001);
+                newLng = lastPosition.lng + (Math.random() * 0.0002 - 0.0001);
             } else {
                 // Active participants move in a more directed way
                 // Use a semi-persistent direction to create more realistic paths
@@ -342,37 +361,55 @@ class OrganizerTracking {
                 }
                 
                 // Calculate movement based on direction and speed
-                const moveDistance = 0.5 + (participant.speed / 30) * 1.5; // Faster participants move more
-                left = lastPosition.left + Math.cos(participant.movementDirection) * moveDistance;
-                top = lastPosition.top + Math.sin(participant.movementDirection) * moveDistance;
-                
-                // If we're about to hit the edge, change direction
-                if (left < 5 || left > 95 || top < 5 || top > 95) {
-                    participant.movementDirection += Math.PI; // Reverse direction
-                    left = lastPosition.left;
-                    top = lastPosition.top;
-                }
+                const moveDistance = 0.0001 + (participant.speed / 30) * 0.0003; // Faster participants move more
+                newLat = lastPosition.lat + Math.cos(participant.movementDirection) * moveDistance;
+                newLng = lastPosition.lng + Math.sin(participant.movementDirection) * moveDistance;
             }
-            
-            // Keep within bounds
-            left = Math.max(5, Math.min(95, left));
-            top = Math.max(5, Math.min(95, top));
         } else {
-            // Generate initial position based on participant id but more spread out
-            left = 10 + (participant.id * 12) % 80;
-            top = 10 + (participant.id * 9) % 80;
+            // Use the initial position from the participant data
+            newLat = participant.position.latitude;
+            newLng = participant.position.longitude;
         }
         
-        // Update marker position
-        marker.style.left = `${left}%`;
-        marker.style.top = `${top}%`;
+        // Update participant's position data
+        participant.position.latitude = newLat;
+        participant.position.longitude = newLng;
+        
+        // Update Leaflet marker position
+        marker.setLatLng([newLat, newLng]);
+        
+        // Update popup content with latest info
+        const popupContent = `
+            <div style="text-align: center; font-weight: bold;">
+                ${participant.name}<br>
+                <span style="background-color: ${participant.trackingColor}; color: white; padding: 2px 5px; border-radius: 3px;">
+                    ${participant.sailNumber}
+                </span>
+                ${participant.status === 'sos' ? '<br><span style="color: red; font-weight: bold;">SOS!</span>' : ''}
+            </div>
+            <div style="margin-top: 5px;">
+                <strong>Prędkość:</strong> ${participant.speed.toFixed(1)} km/h<br>
+                <strong>Dystans:</strong> ${participant.distance.toFixed(1)} km
+            </div>
+        `;
+        marker.getPopup()?.setContent(popupContent);
         
         // Store position in history
-        participant.positionHistory.push({ left, top });
+        participant.positionHistory.push({
+            lat: newLat,
+            lng: newLng
+        });
         
-        // Update route path if we have a path element and multiple points
+        // Update route path if we have a path element
         if (participant.routePath && participant.positionHistory.length > 1) {
-            this.updateRoutePath(participant);
+            participant.routePath.addLatLng([newLat, newLng]);
+            
+            // Limit the number of points in the polyline for performance
+            const maxPoints = 100;
+            if (participant.routePath.getLatLngs().length > maxPoints) {
+                const newLatLngs = participant.routePath.getLatLngs().slice(-maxPoints);
+                participant.routePath.setLatLngs(newLatLngs);
+            }
         }
         
         // Update participant data with more realistic values
@@ -466,45 +503,74 @@ class OrganizerTracking {
             }
         });
         
-        const selectedItem = document.querySelector(`.participant-item:nth-child(${participant.id + 1})`);
+        const selectedItem = document.querySelector(`.participant-item[data-id="${participant.id}"]`);
         if (selectedItem && !selectedItem.classList.contains('sos')) {
             selectedItem.classList.add('active');
         }
         
-        // Highlight marker on map
-        Object.values(this.participantMarkers).forEach(marker => {
-            marker.style.zIndex = 1;
-            marker.style.boxShadow = 'none';
-        });
-        
-        const selectedMarker = this.participantMarkers[participant.id];
-        if (selectedMarker) {
-            selectedMarker.style.zIndex = 10;
-            selectedMarker.style.boxShadow = '0 0 0 3px white';
+        // Open popup for the marker
+        const marker = this.participantMarkers[participant.id];
+        if (marker) {
+            marker.openPopup();
+            
+            // Pan map to marker
+            this.map.panTo(marker.getLatLng());
+            
+            // Update participant details panel
+            this.updateParticipantDetailsPanel(participant);
         }
         
         console.log(`Selected participant: ${participant.name} (${participant.sailNumber})`);
     }
     
+    // Update participant details panel
+    updateParticipantDetailsPanel(participant) {
+        const detailsPanel = document.getElementById('participant-details');
+        if (!detailsPanel) return;
+        
+        // Update details
+        document.getElementById('detail-name').textContent = participant.name;
+        document.getElementById('detail-sail').textContent = participant.sailNumber;
+        document.getElementById('detail-status').textContent = participant.status === 'sos' ? 'SOS' : 
+            (participant.position ? 'Aktywny' : 'Oczekuje');
+        document.getElementById('detail-distance').textContent = participant.distance ? 
+            `${participant.distance.toFixed(1)} km` : '0.0 km';
+        document.getElementById('detail-speed').textContent = participant.speed ? 
+            `${participant.speed.toFixed(1)} km/h` : '0.0 km/h';
+        document.getElementById('detail-last-update').textContent = participant.lastUpdate ? 
+            new Date(participant.lastUpdate).toLocaleTimeString() : new Date().toLocaleTimeString();
+        document.getElementById('detail-phone').textContent = participant.phone || '-';
+        document.getElementById('detail-emergency').textContent = participant.emergencyContact || '-';
+        
+        // Show panel
+        detailsPanel.style.display = 'block';
+    }
+    
     // Filter participants
     filterParticipants(filterIndex) {
         let filteredParticipants;
+        let filterName = 'all';
         
         switch (filterIndex) {
             case 0: // All
                 filteredParticipants = this.participants;
+                filterName = 'all';
                 break;
             case 1: // Active
                 filteredParticipants = this.participants.filter(p => p.status === 'active');
+                filterName = 'active';
                 break;
             case 2: // Waiting
                 filteredParticipants = this.participants.filter(p => p.status === 'waiting');
+                filterName = 'waiting';
                 break;
             case 3: // SOS
                 filteredParticipants = this.participants.filter(p => p.status === 'sos');
+                filterName = 'sos';
                 break;
             default:
                 filteredParticipants = this.participants;
+                filterName = 'all';
         }
         
         // Update visibility of markers
@@ -512,14 +578,30 @@ class OrganizerTracking {
             const marker = this.participantMarkers[participant.id];
             if (marker) {
                 if (filteredParticipants.includes(participant)) {
-                    marker.style.display = 'block';
+                    // Show marker
+                    if (!this.map.hasLayer(marker)) {
+                        marker.addTo(this.map);
+                    }
+                    
+                    // Show route path
+                    if (participant.routePath && !this.map.hasLayer(participant.routePath)) {
+                        participant.routePath.addTo(this.map);
+                    }
                 } else {
-                    marker.style.display = 'none';
+                    // Hide marker
+                    if (this.map.hasLayer(marker)) {
+                        marker.removeFrom(this.map);
+                    }
+                    
+                    // Hide route path
+                    if (participant.routePath && this.map.hasLayer(participant.routePath)) {
+                        participant.routePath.removeFrom(this.map);
+                    }
                 }
             }
         });
         
-        console.log(`Filtered participants: ${filteredParticipants.length}`);
+        showDebug(`Filtered participants to "${filterName}": ${filteredParticipants.length} visible`);
     }
     
     // Show SOS alert
@@ -656,26 +738,69 @@ Wysłano pomoc ratunkową.`);
     
     // Map zoom in
     zoomIn() {
-        // In a real application, this would zoom in the map
-        alert('Przybliżenie mapy');
+        if (this.map) {
+            const currentZoom = this.map.getZoom();
+            this.map.setZoom(currentZoom + 1);
+            showDebug('Map zoomed in to level ' + (currentZoom + 1));
+        }
     }
     
     // Map zoom out
     zoomOut() {
-        // In a real application, this would zoom out the map
-        alert('Oddalenie mapy');
+        if (this.map) {
+            const currentZoom = this.map.getZoom();
+            this.map.setZoom(currentZoom - 1);
+            showDebug('Map zoomed out to level ' + (currentZoom - 1));
+        }
     }
     
     // Center map
     centerMap() {
-        // In a real application, this would center the map
-        alert('Centrowanie mapy');
+        if (this.map) {
+            // Center on Zatoka Pucka (Bay of Puck)
+            this.map.setView([54.6960, 18.4310], 13);
+            showDebug('Map centered on Zatoka Pucka');
+        }
+    }
+    
+    // Center on specific participant
+    centerOnParticipant(participantId) {
+        const marker = this.participantMarkers[participantId];
+        if (marker && this.map) {
+            this.map.setView(marker.getLatLng(), 15);
+            showDebug(`Map centered on participant ${participantId}`);
+        }
     }
     
     // Toggle map layers
     toggleLayers() {
-        // In a real application, this would toggle map layers
-        alert('Przełączanie warstw mapy');
+        if (!this.map) return;
+        
+        // If we don't have a satellite layer yet, add it
+        if (!this.satelliteLayer) {
+            this.satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+                maxZoom: 19
+            });
+            
+            this.streetLayer = this.map.getLayers().find(layer => layer instanceof L.TileLayer);
+            this.currentLayer = 'street';
+            
+            showDebug('Satellite layer initialized');
+        }
+        
+        // Toggle between street and satellite view
+        if (this.currentLayer === 'street') {
+            this.map.removeLayer(this.streetLayer);
+            this.satelliteLayer.addTo(this.map);
+            this.currentLayer = 'satellite';
+            showDebug('Switched to satellite view');
+        } else {
+            this.map.removeLayer(this.satelliteLayer);
+            this.streetLayer.addTo(this.map);
+            this.currentLayer = 'street';
+            showDebug('Switched to street view');
+        }
     }
 }
 

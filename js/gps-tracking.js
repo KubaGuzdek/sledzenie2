@@ -474,165 +474,180 @@ class GPSTracker {
     }
 }
 
-// Map visualization class
+// Map visualization class using Leaflet
 class MapVisualizer {
     constructor(mapContainerId) {
-        this.mapContainer = document.getElementById(mapContainerId);
-        this.markers = {};
+        this.mapContainerId = mapContainerId;
+        this.mapContainer = document.querySelector(`#${mapContainerId} .map-container`);
         
-        // Create map elements if they don't exist
-        if (!this.mapContainer.querySelector('.map-grid')) {
-            const mapGrid = document.createElement('div');
-            mapGrid.className = 'map-grid';
-            this.mapContainer.appendChild(mapGrid);
+        if (!this.mapContainer) {
+            console.error(`Map container not found in ${mapContainerId}`);
+            return;
         }
         
-        if (!this.mapContainer.querySelector('.map-marker.current-position')) {
-            const currentMarker = document.createElement('div');
-            currentMarker.className = 'map-marker current-position';
-            this.mapContainer.appendChild(currentMarker);
-            this.markers.current = currentMarker;
-        } else {
-            this.markers.current = this.mapContainer.querySelector('.map-marker.current-position');
-        }
-        
-        if (!this.mapContainer.querySelector('.compass')) {
-            const compass = document.createElement('div');
-            compass.className = 'compass';
-            compass.textContent = 'N';
-            this.mapContainer.appendChild(compass);
-        }
-        
-        if (!this.mapContainer.querySelector('.map-label')) {
-            const mapLabel = document.createElement('div');
-            mapLabel.className = 'map-label';
-            mapLabel.textContent = 'Zatoka Pucka';
-            this.mapContainer.appendChild(mapLabel);
-        }
+        // Initialize Leaflet map
+        this.initializeMap();
         
         // For route visualization
-        this.pathElement = null;
         this.routePoints = [];
+        this.routeLine = null;
+    }
+    
+    // Initialize Leaflet map
+    initializeMap() {
+        // Clear any existing content
+        this.mapContainer.innerHTML = '';
+        
+        // Create a div for the Leaflet map
+        const mapElement = document.createElement('div');
+        mapElement.style.width = '100%';
+        mapElement.style.height = '100%';
+        this.mapContainer.appendChild(mapElement);
+        
+        // Create Leaflet map centered on Zatoka Pucka (Bay of Puck)
+        this.map = L.map(mapElement).setView([54.6960, 18.4310], 13);
+        
+        // Add OpenStreetMap tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
+        }).addTo(this.map);
+        
+        // Create marker for current position
+        const userIcon = L.divIcon({
+            className: 'current-position-icon',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10],
+            html: '<div style="background-color: #1a73e8; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>'
+        });
+        
+        this.currentMarker = L.marker([54.6960, 18.4310], {
+            icon: userIcon,
+            zIndexOffset: 1000
+        }).addTo(this.map);
+        
+        // Create polyline for route tracking
+        this.routeLine = L.polyline([], {
+            color: '#1a73e8',
+            weight: 4,
+            opacity: 0.7,
+            lineJoin: 'round'
+        }).addTo(this.map);
+        
+        if (window.showDebug) {
+            window.showDebug(`Leaflet map initialized in ${this.mapContainerId}`);
+        }
     }
     
     // Update current position marker
     updatePosition(latitude, longitude) {
-        // In a real map implementation, we would convert GPS coordinates to pixel positions
-        // For this simplified version, we'll use a more realistic movement pattern
-        
-        // Get map container dimensions
-        const mapWidth = this.mapContainer.offsetWidth;
-        const mapHeight = this.mapContainer.offsetHeight;
-        
-        let left, top;
-        
-        // If we have previous points, create a smooth movement pattern
-        if (this.routePoints.length > 0) {
-            const lastPoint = this.routePoints[this.routePoints.length - 1];
-            
-            // Calculate new position with some randomness but following a pattern
-            // This simulates a more realistic GPS movement
-            const angle = Math.random() * 2 * Math.PI; // Random direction
-            const distance = 1 + Math.random() * 3; // Random distance (1-4% of container)
-            
-            left = lastPoint.left + Math.cos(angle) * distance;
-            top = lastPoint.top + Math.sin(angle) * distance;
-            
-            // Keep within bounds (5-95%)
-            left = Math.max(5, Math.min(95, left));
-            top = Math.max(5, Math.min(95, top));
-        } else {
-            // Initial position (center of map)
-            left = 50;
-            top = 50;
-        }
+        if (!this.map || !this.currentMarker) return;
         
         // Update marker position
-        this.markers.current.style.left = `${left}%`;
-        this.markers.current.style.top = `${top}%`;
+        this.currentMarker.setLatLng([latitude, longitude]);
+        
+        // Center map on current position
+        this.map.panTo([latitude, longitude]);
         
         // Add point to route
-        this.routePoints.push({left, top});
+        this.routePoints.push({
+            lat: latitude,
+            lng: longitude
+        });
         
         // Update route path if we have multiple points
         if (this.routePoints.length > 1) {
             this.updateRoutePath();
         }
+        
+        if (window.showDebug) {
+            window.showDebug(`Position updated: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+        }
     }
     
     // Update route path visualization
     updateRoutePath() {
-        // Create SVG path element if it doesn't exist
-        if (!this.pathElement) {
-            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            svg.setAttribute("class", "route-path");
-            svg.setAttribute("viewBox", "0 0 100 100");
-            svg.style.position = "absolute";
-            svg.style.top = "0";
-            svg.style.left = "0";
-            svg.style.width = "100%";
-            svg.style.height = "100%";
-            
-            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            path.setAttribute("fill", "none");
-            path.setAttribute("stroke", "#ffffff");
-            path.setAttribute("stroke-width", "1");
-            path.setAttribute("stroke-linecap", "round");
-            path.setAttribute("stroke-linejoin", "round");
-            
-            svg.appendChild(path);
-            this.mapContainer.appendChild(svg);
-            this.pathElement = path;
-        }
+        if (!this.map || !this.routeLine) return;
         
-        // Create path data string
-        let pathData = `M ${this.routePoints[0].left} ${this.routePoints[0].top}`;
+        // Convert route points to LatLng array
+        const latLngs = this.routePoints.map(point => [point.lat, point.lng]);
         
-        for (let i = 1; i < this.routePoints.length; i++) {
-            pathData += ` L ${this.routePoints[i].left} ${this.routePoints[i].top}`;
-        }
-        
-        // Update path
-        this.pathElement.setAttribute("d", pathData);
+        // Update polyline
+        this.routeLine.setLatLngs(latLngs);
     }
     
     // Clear route visualization
     clearRoute() {
         this.routePoints = [];
-        if (this.pathElement) {
-            this.pathElement.setAttribute("d", "");
+        if (this.routeLine) {
+            this.routeLine.setLatLngs([]);
         }
     }
     
     // Add start and end markers for route summary
     addRouteMarkers(startPosition, endPosition) {
-        // Remove existing markers
-        const existingStart = this.mapContainer.querySelector('.map-marker.start-marker');
-        const existingEnd = this.mapContainer.querySelector('.map-marker.end-marker');
+        if (!this.map || this.routePoints.length < 2) return;
         
-        if (existingStart) existingStart.remove();
-        if (existingEnd) existingEnd.remove();
+        // Remove existing markers
+        if (this.startMarker) this.map.removeLayer(this.startMarker);
+        if (this.endMarker) this.map.removeLayer(this.endMarker);
         
         // Create start marker
-        const startMarker = document.createElement('div');
-        startMarker.className = 'map-marker start-marker';
-        startMarker.style.left = `${this.routePoints[0].left}%`;
-        startMarker.style.top = `${this.routePoints[0].top}%`;
-        this.mapContainer.appendChild(startMarker);
+        const startIcon = L.divIcon({
+            className: 'start-marker-icon',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10],
+            html: '<div style="background-color: #4caf50; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>'
+        });
+        
+        this.startMarker = L.marker([this.routePoints[0].lat, this.routePoints[0].lng], {
+            icon: startIcon
+        }).addTo(this.map);
         
         // Create end marker
-        const endMarker = document.createElement('div');
-        endMarker.className = 'map-marker end-marker';
-        endMarker.style.left = `${this.routePoints[this.routePoints.length - 1].left}%`;
-        endMarker.style.top = `${this.routePoints[this.routePoints.length - 1].top}%`;
-        this.mapContainer.appendChild(endMarker);
+        const endIcon = L.divIcon({
+            className: 'end-marker-icon',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10],
+            html: '<div style="background-color: #f44336; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>'
+        });
+        
+        const lastPoint = this.routePoints[this.routePoints.length - 1];
+        this.endMarker = L.marker([lastPoint.lat, lastPoint.lng], {
+            icon: endIcon
+        }).addTo(this.map);
+        
+        // Fit map to show the entire route
+        const bounds = this.routeLine.getBounds();
+        this.map.fitBounds(bounds, {
+            padding: [50, 50]
+        });
     }
     
     // Update distance label
     updateDistanceLabel(distance) {
-        const mapLabel = this.mapContainer.querySelector('.map-label');
-        if (mapLabel) {
-            mapLabel.textContent = `Trasa: ${distance.toFixed(1)} km`;
+        // Create or update distance control
+        if (!this.distanceControl) {
+            // Create a custom control for displaying distance
+            this.distanceControl = L.control({position: 'bottomleft'});
+            
+            this.distanceControl.onAdd = (map) => {
+                const div = L.DomUtil.create('div', 'distance-label');
+                div.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+                div.style.padding = '5px 10px';
+                div.style.borderRadius = '4px';
+                div.style.fontWeight = 'bold';
+                div.innerHTML = `Trasa: ${distance.toFixed(1)} km`;
+                return div;
+            };
+            
+            this.distanceControl.addTo(this.map);
+        } else {
+            // Update existing control
+            const label = document.querySelector('.distance-label');
+            if (label) {
+                label.innerHTML = `Trasa: ${distance.toFixed(1)} km`;
+            }
         }
     }
 }
