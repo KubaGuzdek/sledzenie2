@@ -440,21 +440,7 @@
         <i class="fas fa-user"></i> Widok Zawodnika
     </a>
     
-    <!-- Authentication overlay -->
-    <div id="auth-overlay" class="auth-overlay">
-        <div class="auth-container">
-            <div class="auth-header">
-                <img src="img/logo.png" alt="King Of theBay Logo">
-                <h2>Panel Organizatora</h2>
-                <p>Wprowadź hasło, aby uzyskać dostęp</p>
-            </div>
-            <div class="auth-form">
-                <input type="password" id="auth-password" class="auth-input" placeholder="Hasło organizatora">
-                <button id="auth-submit" class="auth-btn">Zaloguj się</button>
-                <div id="auth-error" class="auth-error" style="display: none;">Nieprawidłowe hasło. Spróbuj ponownie.</div>
-            </div>
-        </div>
-    </div>
+    <!-- Authentication overlay removed for testing -->
     
     <div class="organizer-container">
         <header class="organizer-header" style="background-color: white; color: #1a73e8; border-bottom: 1px solid rgba(0, 0, 0, 0.1);">
@@ -698,54 +684,9 @@
         
         // Organizer view functionality
         document.addEventListener('DOMContentLoaded', function() {
-            // Authentication
-            const authOverlay = document.getElementById('auth-overlay');
-            const authSubmit = document.getElementById('auth-submit');
-            const authPassword = document.getElementById('auth-password');
-            const authError = document.getElementById('auth-error');
-            
-            // Handle authentication
-            authSubmit.addEventListener('click', function() {
-                const password = authPassword.value;
-                showDebug('Login button clicked with password: ' + '*'.repeat(password.length));
-                
-                if (window.trackingCommunication) {
-                    showDebug('Using tracking communication for authentication');
-                    // Set authentication callback first
-                    window.trackingCommunication.setAuthenticationCallback(function(success, role) {
-                        showDebug('Auth callback received: ' + (success ? 'success' : 'failure') + ', role: ' + role);
-                        if (success && role === 'organizer') {
-                            authOverlay.style.display = 'none';
-                            showDebug('Authentication successful');
-                            initializeOrganizerView();
-                        } else {
-                            authError.style.display = 'block';
-                            showDebug('Authentication failed');
-                        }
-                    });
-                    
-                    // Then authenticate
-                    window.trackingCommunication.authenticateOrganizer(password);
-                    showDebug('Authentication request sent');
-    } else {
-        // Check password even if tracking communication is not available
-        if (password === 'kingofthebay2025') {
-            authOverlay.style.display = 'none';
-            showDebug('Authentication successful (local check)');
+            // Authentication removed for testing - directly initialize the organizer view
+            showDebug('Authentication bypassed for testing');
             initializeOrganizerView();
-        } else {
-            authError.style.display = 'block';
-            showDebug('Authentication failed (local check)');
-        }
-    }
-            });
-            
-            // Allow Enter key to submit
-            authPassword.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    authSubmit.click();
-                }
-            });
             
             // Initialize organizer view after authentication
             function initializeOrganizerView() {
