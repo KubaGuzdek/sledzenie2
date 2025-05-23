@@ -136,7 +136,7 @@
             // Get current position from GPS tracker if available
             if (window.trackingApp && window.trackingApp.gpsTracker && window.trackingApp.gpsTracker.currentPosition) {
                 const position = window.trackingApp.gpsTracker.currentPosition;
-                const status = window.trackingApp.gpsTracker.trackingActive ? 'active' : 'inactive';
+                const isActive = window.trackingApp.gpsTracker.trackingActive;
                 
                 const participantData = {
                     participantNumber: parseInt(participantNumber),
@@ -146,8 +146,11 @@
                         accuracy: position.accuracy,
                         timestamp: position.timestamp
                     },
-                    status: status,
-                    speed: position.speed || 0
+                    active: isActive,
+                    status: isActive ? 'active' : 'inactive',
+                    speed: position.speed || 0,
+                    accuracy: position.accuracy,
+                    timestamp: position.timestamp
                 };
                 
                 sendParticipantUpdate(participantData);
@@ -164,11 +167,15 @@
                         accuracy: 5 + Math.random() * 10,
                         timestamp: Date.now()
                     },
+                    active: true,
                     status: 'active',
-                    speed: 4 + Math.random() * 4 // 4-8 m/s
+                    speed: 4 + Math.random() * 4, // 4-8 m/s
+                    accuracy: 5 + Math.random() * 10,
+                    timestamp: Date.now()
                 };
                 
                 sendParticipantUpdate(participantData);
+                console.log('Sent simulated participant update for #' + participantNumber);
             }
         }, 2000); // Send every 2 seconds
     }
