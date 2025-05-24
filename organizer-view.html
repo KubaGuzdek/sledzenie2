@@ -258,6 +258,65 @@
             transform: scale(1.1);
             box-shadow: 0 4px 12px rgba(0,0,0,0.4);
         }
+        
+        /* Message Panel Styles */
+        .message-panel {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .message-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        #message-input {
+            width: 100%;
+            min-height: 80px;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'Roboto', sans-serif;
+            font-size: 14px;
+            resize: vertical;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+        
+        #message-input:focus {
+            outline: none;
+            border-color: #1a73e8;
+        }
+        
+        .send-message-btn {
+            width: 100%;
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .send-message-btn:hover {
+            background-color: #1557b0;
+        }
+        
+        .send-message-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -276,6 +335,16 @@
             <div class="participants-title">Zawodnicy (1-200)</div>
             <div class="participants-grid" id="participants-grid">
                 <!-- Participants will be generated here -->
+            </div>
+            
+            <!-- Message Panel -->
+            <div class="message-panel">
+                <div class="message-title">Komunikat dla zawodników</div>
+                <textarea id="message-input" placeholder="Wpisz komunikat dla wszystkich zawodników..." maxlength="200"></textarea>
+                <button id="send-message-btn" class="send-message-btn">
+                    <i class="fas fa-paper-plane"></i>
+                    Wyślij komunikat
+                </button>
             </div>
         </div>
         
@@ -378,6 +447,17 @@
             
             document.getElementById('center-map').addEventListener('click', function() {
                 map.setView([54.6892, 18.4021], 12);
+            });
+            
+            // Message sending functionality
+            document.getElementById('send-message-btn').addEventListener('click', sendMessage);
+            
+            // Allow Enter key to send message (Ctrl+Enter for new line)
+            document.getElementById('message-input').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.ctrlKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
             });
         }
         
@@ -618,6 +698,45 @@
                 // Open popup immediately for SOS
                 marker.openPopup();
             }
+        }
+        
+        // Send message to all participants
+        function sendMessage() {
+            const messageInput = document.getElementById('message-input');
+            const sendBtn = document.getElementById('send-message-btn');
+            const message = messageInput.value.trim();
+            
+            if (!message) {
+                alert('Wpisz komunikat przed wysłaniem');
+                return;
+            }
+            
+            // Disable button temporarily
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Wysyłanie...';
+            
+            const messageData = {
+                type: 'organizerMessage',
+                message: message,
+                timestamp: Date.now(),
+                sender: 'Organizator'
+            };
+            
+            // Send message via WebSocket
+            if (window.trackingCommunication) {
+                window.trackingCommunication.sendOrganizerMessage(messageData);
+            } else {
+                console.log('Message (demo mode):', messageData);
+            }
+            
+            // Clear input and re-enable button
+            messageInput.value = '';
+            setTimeout(() => {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Wyślij komunikat';
+            }, 1000);
+            
+            console.log('Message sent to all participants:', message);
         }
         
     </script>

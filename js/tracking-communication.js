@@ -8,6 +8,7 @@
     let isConnected = false;
     let participantUpdateCallback = null;
     let sosAlertCallback = null;
+    let organizerMessageCallback = null;
     let reconnectAttempts = 0;
     const maxReconnectAttempts = 5;
     
@@ -76,6 +77,12 @@
             case 'participantList':
                 if (participantListUpdateCallback) {
                     participantListUpdateCallback(data.payload);
+                }
+                break;
+            
+            case 'organizerMessage':
+                if (organizerMessageCallback) {
+                    organizerMessageCallback(data.payload);
                 }
                 break;
             
@@ -258,6 +265,11 @@
         sosAlertCallback = callback;
     }
     
+    // Set callback for organizer messages (used by participants)
+    function setOrganizerMessageCallback(callback) {
+        organizerMessageCallback = callback;
+    }
+    
     // Start listening for updates
     function startListening() {
         if (!socket) {
@@ -303,6 +315,25 @@
         }
     }
     
+    // Send organizer message to all participants
+    function sendOrganizerMessage(messageData) {
+        const message = {
+            type: 'organizerMessage',
+            payload: messageData
+        };
+        
+        if (isConnected && socket) {
+            try {
+                socket.send(JSON.stringify(message));
+                console.log('Sent organizer message:', messageData);
+            } catch (error) {
+                console.error('Error sending organizer message:', error);
+            }
+        } else {
+            console.log('WebSocket not connected, organizer message:', messageData);
+        }
+    }
+    
     // Public API
     window.trackingCommunication = {
         // Core functions
@@ -318,6 +349,10 @@
         stopSending: stopSending,
         sendSOS: sendSOS,
         sendSOSSignal: sendSOSSignal,
+        
+        // Organizer messaging
+        sendOrganizerMessage: sendOrganizerMessage,
+        setOrganizerMessageCallback: setOrganizerMessageCallback,
         
         // Initialize connection manually if needed
         initialize: initializeConnection

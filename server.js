@@ -55,6 +55,10 @@ function handleWebSocketMessage(ws, data) {
             handleSOSAlert(data.payload);
             break;
         
+        case 'organizerMessage':
+            handleOrganizerMessage(data.payload);
+            break;
+        
         default:
             console.log('Unknown message type:', data.type);
     }
@@ -188,6 +192,21 @@ function handleSOSAlert(sosData) {
     });
 }
 
+// Handle organizer message
+function handleOrganizerMessage(messageData) {
+    console.log('📢 Organizer message:', messageData.message);
+    
+    // Broadcast message to all connected participant clients
+    broadcastToParticipants({
+        type: 'organizerMessage',
+        payload: {
+            message: messageData.message,
+            timestamp: messageData.timestamp || new Date().toISOString(),
+            sender: messageData.sender || 'Organizator'
+        }
+    });
+}
+
 // Broadcast message to all connected organizer clients
 function broadcastToOrganizers(message) {
     const messageStr = JSON.stringify(message);
@@ -198,6 +217,21 @@ function broadcastToOrganizers(message) {
                 client.send(messageStr);
             } catch (error) {
                 console.error('Error broadcasting to client:', error);
+            }
+        }
+    });
+}
+
+// Broadcast message to all connected participant clients
+function broadcastToParticipants(message) {
+    const messageStr = JSON.stringify(message);
+    
+    wss.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+            try {
+                client.send(messageStr);
+            } catch (error) {
+                console.error('Error broadcasting to participant:', error);
             }
         }
     });

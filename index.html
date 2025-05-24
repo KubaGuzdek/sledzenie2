@@ -294,6 +294,69 @@
                 box-shadow: 0 0 0 0 rgba(255, 68, 68, 0);
             }
         }
+        
+        /* Organizer Message Styles */
+        .organizer-message {
+            background-color: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px 0;
+            position: relative;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .message-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #856404;
+        }
+        
+        .message-header i {
+            margin-right: 8px;
+        }
+        
+        .close-message-btn {
+            background: none;
+            border: none;
+            color: #856404;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
+        .close-message-btn:hover {
+            background-color: rgba(133, 100, 4, 0.1);
+        }
+        
+        .message-content {
+            color: #333;
+            font-size: 16px;
+            line-height: 1.4;
+            margin-bottom: 8px;
+            text-align: left;
+        }
+        
+        .message-time {
+            color: #666;
+            font-size: 12px;
+            text-align: right;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 <body>
@@ -364,6 +427,23 @@
                 <p id="last-update">Ostatnia aktualizacja: -</p>
             </div>
             
+            <!-- Organizer Messages -->
+            <div class="organizer-message" id="organizer-message" style="display: none;">
+                <div class="message-header">
+                    <i class="fas fa-bullhorn"></i>
+                    <span>Komunikat od organizatora</span>
+                    <button class="close-message-btn" id="close-message-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="message-content" id="message-content">
+                    <!-- Message will be displayed here -->
+                </div>
+                <div class="message-time" id="message-time">
+                    <!-- Timestamp will be displayed here -->
+                </div>
+            </div>
+            
             <button class="logout-btn" id="logout-btn">
                 <i class="fas fa-sign-out-alt"></i>
                 Wyloguj się
@@ -394,6 +474,12 @@
             document.getElementById('tracking-btn').addEventListener('click', toggleTracking);
             document.getElementById('sos-btn').addEventListener('click', sendSOS);
             document.getElementById('logout-btn').addEventListener('click', logout);
+            document.getElementById('close-message-btn').addEventListener('click', closeOrganizerMessage);
+            
+            // Setup organizer message callback
+            if (window.trackingCommunication) {
+                window.trackingCommunication.setOrganizerMessageCallback(handleOrganizerMessage);
+            }
         }
         
         // Handle login form submission
@@ -705,6 +791,29 @@
             } else {
                 console.log('SOS data (demo mode):', sosData);
             }
+        }
+        
+        // Handle organizer message
+        function handleOrganizerMessage(messageData) {
+            console.log('Received organizer message:', messageData);
+            
+            // Update message content
+            document.getElementById('message-content').textContent = messageData.message;
+            document.getElementById('message-time').textContent = 
+                `Wysłano: ${new Date(messageData.timestamp).toLocaleString()}`;
+            
+            // Show message panel
+            document.getElementById('organizer-message').style.display = 'block';
+            
+            // Auto-hide after 10 seconds
+            setTimeout(() => {
+                closeOrganizerMessage();
+            }, 10000);
+        }
+        
+        // Close organizer message
+        function closeOrganizerMessage() {
+            document.getElementById('organizer-message').style.display = 'none';
         }
         
         // Handle page unload (stop tracking when page is closed)
