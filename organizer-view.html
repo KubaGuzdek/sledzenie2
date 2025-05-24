@@ -95,6 +95,18 @@
             color: white;
         }
         
+        .participant-number.sos {
+            background-color: #ff4444;
+            border-color: #ff4444;
+            color: white;
+            animation: sosFlash 1s infinite;
+        }
+        
+        @keyframes sosFlash {
+            0%, 50% { opacity: 1; }
+            25%, 75% { opacity: 0.5; }
+        }
+        
         .participant-number.selected {
             background-color: #1a73e8;
             border-color: #1a73e8;
@@ -425,6 +437,7 @@
         function startTracking() {
             if (window.trackingCommunication) {
                 window.trackingCommunication.setParticipantUpdateCallback(updateParticipant);
+                window.trackingCommunication.setSOSAlertCallback(handleSOSAlert);
                 window.trackingCommunication.startListening();
                 console.log('Tracking system started');
             } else {
@@ -518,6 +531,89 @@
                     });
                 
                 participant.marker = marker;
+            }
+        }
+        
+        // Handle SOS alert
+        function handleSOSAlert(sosData) {
+            console.log('🚨 SOS ALERT received:', sosData);
+            
+            const number = parseInt(sosData.participantNumber);
+            if (number >= 1 && number <= 200) {
+                const participant = participants[number];
+                
+                // Update participant with SOS status
+                participant.sosAlert = true;
+                participant.sosMessage = sosData.message;
+                participant.sosTimestamp = sosData.timestamp;
+                participant.active = true; // Mark as active
+                
+                // Update position if provided
+                if (sosData.position) {
+                    participant.position = sosData.position;
+                }
+                
+                participant.lastUpdate = sosData.timestamp || Date.now();
+                
+                // Update UI with SOS styling
+                const participantEl = document.querySelector(`[data-number="${number}"]`);
+                participantEl.classList.add('sos');
+                participantEl.classList.add('active');
+                
+                // Update marker with SOS styling
+                updateSOSMarker(number);
+                
+                // Show alert notification
+                alert(`🚨 SYGNAŁ SOS od zawodnika #${number}!\n\n${sosData.message}\n\nLokalizacja: ${sosData.position ? 
+                    `${sosData.position.lat.toFixed(6)}, ${sosData.position.lng.toFixed(6)}` : 'Brak dokładnej lokalizacji'}`);
+                
+                // Auto-select participant and center map
+                selectParticipant(number);
+                if (participant.position) {
+                    map.setView([participant.position.lat, participant.position.lng], 16);
+                }
+                
+                console.log(`SOS alert processed for participant #${number}`);
+            }
+        }
+        
+        // Update SOS marker on map
+        function updateSOSMarker(number) {
+            const participant = participants[number];
+            
+            // Remove existing marker
+            if (participant.marker) {
+                map.removeLayer(participant.marker);
+                participant.marker = null;
+            }
+            
+            // Add SOS marker if participant has position
+            if (participant.position) {
+                // Create SOS icon with red color and flashing effect
+                const sosIcon = L.divIcon({
+                    className: 'custom-participant-marker',
+                    html: `<div class="marker-content">
+                        <div class="marker-circle" style="background-color: #ff4444; animation: sosFlash 1s infinite;">
+                            ${number}
+                        </div>
+                    </div>`,
+                    iconSize: [35, 35],
+                    iconAnchor: [17.5, 17.5]
+                });
+                
+                const marker = L.marker([participant.position.lat, participant.position.lng], {
+                    icon: sosIcon
+                })
+                    .addTo(map)
+                    .bindPopup(`🚨 SOS - Zawodnik #${number}<br>${participant.sosMessage || 'Potrzebuję pomocy!'}`)
+                    .on('click', function() {
+                        selectParticipant(number);
+                    });
+                
+                participant.marker = marker;
+                
+                // Open popup immediately for SOS
+                marker.openPopup();
             }
         }
         

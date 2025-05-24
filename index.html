@@ -254,6 +254,46 @@
         .logout-btn:hover {
             background-color: #eeeeee;
         }
+        
+        .sos-btn {
+            width: 100%;
+            padding: 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 15px;
+            background-color: #ff4444;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+        
+        .sos-btn:hover {
+            background-color: #cc0000;
+            transform: scale(1.02);
+        }
+        
+        .sos-btn:active {
+            transform: scale(0.98);
+        }
+        
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(255, 68, 68, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 68, 68, 0);
+            }
+        }
     </style>
 </head>
 <body>
@@ -312,6 +352,11 @@
                 Włącz śledzenie
             </button>
             
+            <button class="sos-btn" id="sos-btn">
+                <i class="fas fa-exclamation-triangle"></i>
+                SOS - POMOC!
+            </button>
+            
             <div class="location-info" id="location-info" style="display: none;">
                 <h4><i class="fas fa-map-marker-alt"></i> Aktualna pozycja</h4>
                 <p id="coordinates">Pobieranie lokalizacji...</p>
@@ -347,6 +392,7 @@
         function setupEventListeners() {
             document.getElementById('login-form').addEventListener('submit', handleLogin);
             document.getElementById('tracking-btn').addEventListener('click', toggleTracking);
+            document.getElementById('sos-btn').addEventListener('click', sendSOS);
             document.getElementById('logout-btn').addEventListener('click', logout);
         }
         
@@ -579,6 +625,87 @@
                 }
             }
         });
+        
+        // Send SOS signal
+        function sendSOS() {
+            if (!currentParticipant) {
+                alert('Musisz być zalogowany, aby wysłać sygnał SOS');
+                return;
+            }
+            
+            // Confirm SOS action
+            if (!confirm('Czy na pewno chcesz wysłać sygnał SOS? Organizator zostanie natychmiast powiadomiony o Twojej lokalizacji.')) {
+                return;
+            }
+            
+            // Get current position for SOS
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const sosData = {
+                            participantNumber: currentParticipant,
+                            type: 'SOS',
+                            position: {
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude
+                            },
+                            accuracy: position.coords.accuracy,
+                            timestamp: new Date().toISOString(),
+                            message: 'SYGNAŁ SOS - POTRZEBUJĘ POMOCY!'
+                        };
+                        
+                        // Send SOS data
+                        sendSOSData(sosData);
+                        
+                        // Show confirmation
+                        alert('Sygnał SOS został wysłany! Organizator został powiadomiony o Twojej lokalizacji.');
+                        
+                        console.log('SOS signal sent:', sosData);
+                    },
+                    function(error) {
+                        console.error('SOS location error:', error);
+                        
+                        // Send SOS without precise location
+                        const sosData = {
+                            participantNumber: currentParticipant,
+                            type: 'SOS',
+                            position: null,
+                            timestamp: new Date().toISOString(),
+                            message: 'SYGNAŁ SOS - POTRZEBUJĘ POMOCY! (brak dokładnej lokalizacji)'
+                        };
+                        
+                        sendSOSData(sosData);
+                        alert('Sygnał SOS został wysłany! (nie udało się pobrać dokładnej lokalizacji)');
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 5000,
+                        maximumAge: 0
+                    }
+                );
+            } else {
+                // Send SOS without location
+                const sosData = {
+                    participantNumber: currentParticipant,
+                    type: 'SOS',
+                    position: null,
+                    timestamp: new Date().toISOString(),
+                    message: 'SYGNAŁ SOS - POTRZEBUJĘ POMOCY! (geolokalizacja niedostępna)'
+                };
+                
+                sendSOSData(sosData);
+                alert('Sygnał SOS został wysłany!');
+            }
+        }
+        
+        // Send SOS data to server
+        function sendSOSData(sosData) {
+            if (window.trackingCommunication) {
+                window.trackingCommunication.sendSOSSignal(sosData);
+            } else {
+                console.log('SOS data (demo mode):', sosData);
+            }
+        }
         
         // Handle page unload (stop tracking when page is closed)
         window.addEventListener('beforeunload', function() {

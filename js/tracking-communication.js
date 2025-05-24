@@ -7,6 +7,7 @@
     let socket = null;
     let isConnected = false;
     let participantUpdateCallback = null;
+    let sosAlertCallback = null;
     let reconnectAttempts = 0;
     const maxReconnectAttempts = 5;
     
@@ -63,6 +64,12 @@
             case 'participantUpdate':
                 if (participantUpdateCallback) {
                     participantUpdateCallback(data.payload);
+                }
+                break;
+            
+            case 'sosAlert':
+                if (sosAlertCallback) {
+                    sosAlertCallback(data.payload);
                 }
                 break;
             
@@ -246,6 +253,11 @@
         participantUpdateCallback = callback;
     }
     
+    // Set callback for SOS alerts (used by organizer)
+    function setSOSAlertCallback(callback) {
+        sosAlertCallback = callback;
+    }
+    
     // Start listening for updates
     function startListening() {
         if (!socket) {
@@ -272,6 +284,25 @@
         };
     }
     
+    // Send SOS signal (new format for participant panel)
+    function sendSOSSignal(sosData) {
+        const message = {
+            type: 'sosAlert',
+            payload: sosData
+        };
+        
+        if (isConnected && socket) {
+            try {
+                socket.send(JSON.stringify(message));
+                console.log('Sent SOS signal:', sosData);
+            } catch (error) {
+                console.error('Error sending SOS signal:', error);
+            }
+        } else {
+            console.log('WebSocket not connected, SOS signal:', sosData);
+        }
+    }
+    
     // Public API
     window.trackingCommunication = {
         // Core functions
@@ -279,12 +310,14 @@
         stopListening: stopListening,
         sendParticipantUpdate: sendParticipantUpdate,
         setParticipantUpdateCallback: setParticipantUpdateCallback,
+        setSOSAlertCallback: setSOSAlertCallback,
         getConnectionStatus: getConnectionStatus,
         
         // GPS tracker integration
         startSending: startSending,
         stopSending: stopSending,
         sendSOS: sendSOS,
+        sendSOSSignal: sendSOSSignal,
         
         // Initialize connection manually if needed
         initialize: initializeConnection

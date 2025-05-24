@@ -51,6 +51,10 @@ function handleWebSocketMessage(ws, data) {
             handleParticipantUpdate(data.payload);
             break;
         
+        case 'sosAlert':
+            handleSOSAlert(data.payload);
+            break;
+        
         default:
             console.log('Unknown message type:', data.type);
     }
@@ -109,6 +113,77 @@ function handleParticipantUpdate(participantData) {
             position: convertedPosition,
             accuracy: participantData.accuracy,
             timestamp: participantData.timestamp || new Date().toISOString()
+        }
+    });
+}
+
+// Handle SOS alert
+function handleSOSAlert(sosData) {
+    const participantNumber = sosData.participantNumber;
+    
+    // Validate participant number
+    if (!participantNumber || participantNumber < 1 || participantNumber > 200) {
+        console.error('Invalid participant number in SOS alert:', participantNumber);
+        return;
+    }
+    
+    // Convert position format if needed
+    let convertedPosition = null;
+    if (sosData.position) {
+        if (sosData.position.lat !== undefined && sosData.position.lng !== undefined) {
+            convertedPosition = sosData.position;
+        } else if (sosData.position.latitude !== undefined && sosData.position.longitude !== undefined) {
+            convertedPosition = {
+                lat: sosData.position.latitude,
+                lng: sosData.position.longitude
+            };
+        }
+    }
+    
+    console.log(`🚨 SOS ALERT from participant #${participantNumber}:`, {
+        message: sosData.message || 'SOS - POTRZEBUJĘ POMOCY!',
+        position: convertedPosition ? 
+            `${convertedPosition.lat.toFixed(6)}, ${convertedPosition.lng.toFixed(6)}` : 
+            'Brak lokalizacji',
+        timestamp: sosData.timestamp
+    });
+    
+    // Update participant data with SOS status
+    const existingParticipant = participants.get(participantNumber) || {};
+    participants.set(participantNumber, {
+        ...existingParticipant,
+        number: participantNumber,
+        active: true, // Mark as active when SOS is sent
+        position: convertedPosition,
+        sosAlert: true,
+        sosTimestamp: sosData.timestamp,
+        sosMessage: sosData.message || 'SYGNAŁ SOS - POTRZEBUJĘ POMOCY!',
+        lastUpdate: sosData.timestamp || new Date().toISOString()
+    });
+    
+    // Broadcast SOS alert to all organizer clients
+    broadcastToOrganizers({
+        type: 'sosAlert',
+        payload: {
+            participantNumber: participantNumber,
+            position: convertedPosition,
+            message: sosData.message || 'SYGNAŁ SOS - POTRZEBUJĘ POMOCY!',
+            timestamp: sosData.timestamp || new Date().toISOString(),
+            accuracy: sosData.accuracy
+        }
+    });
+    
+    // Also send as regular participant update to show on map
+    broadcastToOrganizers({
+        type: 'participantUpdate',
+        payload: {
+            participantNumber: participantNumber,
+            status: 'sos',
+            active: true,
+            position: convertedPosition,
+            accuracy: sosData.accuracy,
+            timestamp: sosData.timestamp || new Date().toISOString(),
+            sosAlert: true
         }
     });
 }
