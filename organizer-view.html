@@ -50,7 +50,36 @@
         .main-container {
             display: grid;
             grid-template-columns: 280px 1fr 200px;
+            grid-template-rows: 1fr;
             height: calc(100vh - 50px);
+            min-height: 800px;
+        }
+        
+        .middle-column {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .map-and-controls-container {
+            display: flex;
+            flex-direction: column;
+            height: 500px;
+            flex-shrink: 0;
+        }
+        
+        .bottom-panels {
+            background-color: white;
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .bottom-panel {
+            flex: 1;
+            min-width: 300px;
         }
         
         .participants-panel {
@@ -321,12 +350,136 @@
             background-color: #ccc;
             cursor: not-allowed;
         }
+        
+        /* Race Results Panel Styles */
+        .race-results-panel {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .race-results-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .race-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        #race-select {
+            flex: 1;
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .race-btn {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .race-btn:hover {
+            background-color: #45a049;
+        }
+        
+        .race-info h4 {
+            margin: 0 0 15px 0;
+            color: #1a73e8;
+            font-size: 16px;
+        }
+        
+        .result-input-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .result-input-section label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .result-input-section select,
+        .result-input-section input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        .results-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            background-color: white;
+        }
+        
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+        
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .result-position {
+            font-weight: 600;
+            color: #1a73e8;
+            min-width: 30px;
+        }
+        
+        .result-participant {
+            flex: 1;
+            margin-left: 10px;
+        }
+        
+        .delete-result {
+            background: none;
+            border: none;
+            color: #ff4444;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
+        .delete-result:hover {
+            background-color: #ffe6e6;
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <div style="display: flex; align-items: center; gap: 15px;">
-            <img src="img/logo.png" alt="King Of theBay Logo" style="width: 40px; height: 40px; object-fit: contain;">
+            <img src="img/kotb.png" alt="King Of theBay Logo" style="width: 40px; height: 40px; object-fit: contain;">
             <h1>King Of theBay - Panel Organizatora</h1>
         </div>
         <a href="index.html" class="participant-link">
@@ -340,9 +493,38 @@
             <div class="participants-grid" id="participants-grid">
                 <!-- Participants will be generated here -->
             </div>
+        </div>
+        
+        <div class="middle-column">
+            <div class="map-and-controls-container">
+                <div class="map-container">
+                    <div id="map"></div>
+                    
+                    <div class="map-controls">
+                        <button class="map-control-btn" id="zoom-in" title="Powiększ">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                        <button class="map-control-btn" id="zoom-out" title="Pomniejsz">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <button class="map-control-btn" id="center-map" title="Wyśrodkuj mapę">
+                            <i class="fas fa-crosshairs"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="participant-info" id="participant-info">
+                        <h3 id="info-title">Zawodnik #1</h3>
+                        <p><span class="status-indicator status-inactive"></span><span id="info-status">Nieaktywny</span></p>
+                        <p id="info-location">Brak lokalizacji</p>
+                        <p id="info-time">-</p>
+                    </div>
+                </div>
+            </div>
             
+            <!-- Bottom Panels under Map -->
+            <div class="bottom-panels">
             <!-- Message Panel -->
-            <div class="message-panel">
+            <div class="bottom-panel">
                 <div class="message-title">Komunikat dla zawodników</div>
                 <textarea id="message-input" placeholder="Wpisz komunikat dla wszystkich zawodników..." maxlength="200"></textarea>
                 <button id="send-message-btn" class="send-message-btn">
@@ -350,28 +532,35 @@
                     Wyślij komunikat
                 </button>
             </div>
-        </div>
-        
-        <div class="map-container">
-            <div id="map"></div>
             
-            <div class="map-controls">
-                <button class="map-control-btn" id="zoom-in" title="Powiększ">
-                    <i class="fas fa-plus"></i>
-                </button>
-                <button class="map-control-btn" id="zoom-out" title="Pomniejsz">
-                    <i class="fas fa-minus"></i>
-                </button>
-                <button class="map-control-btn" id="center-map" title="Wyśrodkuj mapę">
-                    <i class="fas fa-crosshairs"></i>
-                </button>
-            </div>
-            
-            <div class="participant-info" id="participant-info">
-                <h3 id="info-title">Zawodnik #1</h3>
-                <p><span class="status-indicator status-inactive"></span><span id="info-status">Nieaktywny</span></p>
-                <p id="info-location">Brak lokalizacji</p>
-                <p id="info-time">-</p>
+            <!-- Race Results Panel -->
+            <div class="bottom-panel">
+                <div class="race-results-title">Wyniki wyścigów</div>
+                <div class="race-controls">
+                    <select id="race-select">
+                        <option value="">Wybierz wyścig</option>
+                    </select>
+                    <button id="new-race-btn" class="race-btn">
+                        <i class="fas fa-plus"></i> Nowy wyścig
+                    </button>
+                </div>
+                <div id="race-results-content" style="display: none;">
+                    <div class="race-info">
+                        <h4 id="current-race-title">Wyścig 1</h4>
+                        <div class="result-input-section">
+                            <label for="participant-select">Zawodnik:</label>
+                            <select id="participant-select">
+                                <option value="">Wybierz zawodnika</option>
+                            </select>
+                            <label for="position-input">Miejsce:</label>
+                            <input type="number" id="position-input" min="1" max="200" placeholder="1">
+                            <button id="add-result-btn" class="race-btn">Dodaj wynik</button>
+                        </div>
+                        <div class="results-list" id="results-list">
+                            <!-- Results will be displayed here -->
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -406,6 +595,8 @@
             initializeMap();
             setupEventListeners();
             startTracking();
+            initializeRaceResults();
+            loadSavedRaceResults();
         });
         
         // Generate participants 1-200
@@ -747,6 +938,205 @@
             }, 1000);
             
             console.log('Message sent to all participants:', message);
+        }
+        
+        // Race Results Management
+        let races = {};
+        let currentRaceId = null;
+        let raceCounter = 0;
+        
+        // Initialize race results functionality
+        function initializeRaceResults() {
+            // Populate participant select
+            const participantSelect = document.getElementById('participant-select');
+            for (let i = 1; i <= 200; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `Zawodnik #${i}`;
+                participantSelect.appendChild(option);
+            }
+            
+            // Event listeners
+            document.getElementById('new-race-btn').addEventListener('click', createNewRace);
+            document.getElementById('race-select').addEventListener('change', selectRace);
+            document.getElementById('add-result-btn').addEventListener('click', addResult);
+        }
+        
+        // Create new race
+        function createNewRace() {
+            raceCounter++;
+            const raceId = `race_${raceCounter}`;
+            const raceName = `Wyścig ${raceCounter}`;
+            
+            races[raceId] = {
+                id: raceId,
+                name: raceName,
+                results: {}
+            };
+            
+            // Add to select
+            const raceSelect = document.getElementById('race-select');
+            const option = document.createElement('option');
+            option.value = raceId;
+            option.textContent = raceName;
+            raceSelect.appendChild(option);
+            
+            // Auto-select new race
+            raceSelect.value = raceId;
+            selectRace();
+            
+            console.log(`Created new race: ${raceName}`);
+        }
+        
+        // Select race
+        function selectRace() {
+            const raceSelect = document.getElementById('race-select');
+            const raceId = raceSelect.value;
+            
+            if (raceId && races[raceId]) {
+                currentRaceId = raceId;
+                document.getElementById('current-race-title').textContent = races[raceId].name;
+                document.getElementById('race-results-content').style.display = 'block';
+                displayRaceResults(raceId);
+            } else {
+                currentRaceId = null;
+                document.getElementById('race-results-content').style.display = 'none';
+            }
+        }
+        
+        // Add result to current race
+        function addResult() {
+            if (!currentRaceId) {
+                alert('Wybierz wyścig');
+                return;
+            }
+            
+            const participantSelect = document.getElementById('participant-select');
+            const positionInput = document.getElementById('position-input');
+            
+            const participantNumber = parseInt(participantSelect.value);
+            const position = parseInt(positionInput.value);
+            
+            if (!participantNumber || !position) {
+                alert('Wybierz zawodnika i wpisz miejsce');
+                return;
+            }
+            
+            if (position < 1 || position > 200) {
+                alert('Miejsce musi być między 1 a 200');
+                return;
+            }
+            
+            // Check if position is already taken
+            const race = races[currentRaceId];
+            const existingParticipant = Object.keys(race.results).find(p => race.results[p] === position);
+            if (existingParticipant) {
+                if (!confirm(`Miejsce ${position} jest już zajęte przez zawodnika #${existingParticipant}. Czy chcesz je zastąpić?`)) {
+                    return;
+                }
+                delete race.results[existingParticipant];
+            }
+            
+            // Add result
+            race.results[participantNumber] = position;
+            
+            // Clear inputs
+            participantSelect.value = '';
+            positionInput.value = '';
+            
+            // Refresh display
+            displayRaceResults(currentRaceId);
+            
+            // Send results to participants
+            broadcastRaceResults();
+            
+            console.log(`Added result: Participant #${participantNumber} - Position ${position} in ${race.name}`);
+        }
+        
+        // Display race results
+        function displayRaceResults(raceId) {
+            const race = races[raceId];
+            const resultsList = document.getElementById('results-list');
+            
+            // Clear current results
+            resultsList.innerHTML = '';
+            
+            if (Object.keys(race.results).length === 0) {
+                resultsList.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">Brak wyników</div>';
+                return;
+            }
+            
+            // Sort results by position
+            const sortedResults = Object.entries(race.results).sort((a, b) => a[1] - b[1]);
+            
+            sortedResults.forEach(([participantNumber, position]) => {
+                const resultItem = document.createElement('div');
+                resultItem.className = 'result-item';
+                resultItem.innerHTML = `
+                    <span class="result-position">${position}.</span>
+                    <span class="result-participant">Zawodnik #${participantNumber}</span>
+                    <button class="delete-result" onclick="deleteResult(${participantNumber})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                resultsList.appendChild(resultItem);
+            });
+        }
+        
+        // Delete result
+        function deleteResult(participantNumber) {
+            if (!currentRaceId) return;
+            
+            if (confirm(`Czy na pewno chcesz usunąć wynik zawodnika #${participantNumber}?`)) {
+                delete races[currentRaceId].results[participantNumber];
+                displayRaceResults(currentRaceId);
+                broadcastRaceResults();
+                console.log(`Deleted result for participant #${participantNumber}`);
+            }
+        }
+        
+        // Broadcast race results to all participants
+        function broadcastRaceResults() {
+            const resultsData = {
+                type: 'raceResults',
+                races: races,
+                timestamp: Date.now()
+            };
+            
+            if (window.trackingCommunication) {
+                window.trackingCommunication.sendRaceResults(resultsData);
+            } else {
+                console.log('Race results (demo mode):', resultsData);
+            }
+            
+            // Store in localStorage for persistence
+            localStorage.setItem('raceResults', JSON.stringify(races));
+        }
+        
+        // Load saved race results
+        function loadSavedRaceResults() {
+            const saved = localStorage.getItem('raceResults');
+            if (saved) {
+                try {
+                    races = JSON.parse(saved);
+                    
+                    // Rebuild race select options
+                    const raceSelect = document.getElementById('race-select');
+                    Object.values(races).forEach(race => {
+                        const option = document.createElement('option');
+                        option.value = race.id;
+                        option.textContent = race.name;
+                        raceSelect.appendChild(option);
+                    });
+                    
+                    // Update counter
+                    raceCounter = Object.keys(races).length;
+                    
+                    console.log('Loaded saved race results:', races);
+                } catch (e) {
+                    console.error('Error loading saved race results:', e);
+                }
+            }
         }
         
     </script>

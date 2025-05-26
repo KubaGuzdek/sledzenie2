@@ -9,6 +9,7 @@ const wss = new WebSocket.Server({ server });
 
 // Store participant data (in production, use a database)
 const participants = new Map();
+const raceResults = new Map(); // Store race results
 
 // Serve static files
 app.use(express.static(path.join(__dirname)));
@@ -57,6 +58,10 @@ function handleWebSocketMessage(ws, data) {
         
         case 'organizerMessage':
             handleOrganizerMessage(data.payload);
+            break;
+        
+        case 'raceResults':
+            handleRaceResults(data.payload);
             break;
         
         default:
@@ -207,6 +212,27 @@ function handleOrganizerMessage(messageData) {
     });
 }
 
+// Handle race results
+function handleRaceResults(resultsData) {
+    console.log('🏆 Race results received:', resultsData);
+    
+    // Store race results
+    if (resultsData.races) {
+        Object.keys(resultsData.races).forEach(raceId => {
+            raceResults.set(raceId, resultsData.races[raceId]);
+        });
+    }
+    
+    // Broadcast results to all connected participant clients
+    broadcastToParticipants({
+        type: 'raceResults',
+        payload: {
+            races: resultsData.races,
+            timestamp: resultsData.timestamp || new Date().toISOString()
+        }
+    });
+}
+
 // Broadcast message to all connected organizer clients
 function broadcastToOrganizers(message) {
     const messageStr = JSON.stringify(message);
@@ -262,6 +288,15 @@ app.get('/api/participants/:number', (req, res) => {
             lastUpdate: null
         });
     }
+});
+
+// API endpoint to get race results
+app.get('/api/race-results', (req, res) => {
+    const results = {};
+    raceResults.forEach((value, key) => {
+        results[key] = value;
+    });
+    res.json({ races: results });
 });
 
 // Health check endpoint

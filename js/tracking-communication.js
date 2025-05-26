@@ -9,6 +9,7 @@
     let participantUpdateCallback = null;
     let sosAlertCallback = null;
     let organizerMessageCallback = null;
+    let raceResultsCallback = null;
     let reconnectAttempts = 0;
     const maxReconnectAttempts = 5;
     
@@ -83,6 +84,12 @@
             case 'organizerMessage':
                 if (organizerMessageCallback) {
                     organizerMessageCallback(data.payload);
+                }
+                break;
+            
+            case 'raceResults':
+                if (raceResultsCallback) {
+                    raceResultsCallback(data.payload);
                 }
                 break;
             
@@ -334,6 +341,30 @@
         }
     }
     
+    // Send race results to all participants
+    function sendRaceResults(resultsData) {
+        const message = {
+            type: 'raceResults',
+            payload: resultsData
+        };
+        
+        if (isConnected && socket) {
+            try {
+                socket.send(JSON.stringify(message));
+                console.log('Sent race results:', resultsData);
+            } catch (error) {
+                console.error('Error sending race results:', error);
+            }
+        } else {
+            console.log('WebSocket not connected, race results:', resultsData);
+        }
+    }
+    
+    // Set callback for race results (used by participants)
+    function setRaceResultsCallback(callback) {
+        raceResultsCallback = callback;
+    }
+    
     // Public API
     window.trackingCommunication = {
         // Core functions
@@ -353,6 +384,10 @@
         // Organizer messaging
         sendOrganizerMessage: sendOrganizerMessage,
         setOrganizerMessageCallback: setOrganizerMessageCallback,
+        
+        // Race results
+        sendRaceResults: sendRaceResults,
+        setRaceResultsCallback: setRaceResultsCallback,
         
         // Initialize connection manually if needed
         initialize: initializeConnection

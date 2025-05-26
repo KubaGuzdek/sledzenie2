@@ -30,16 +30,12 @@
         }
         
         .logo {
-            width: 80px;
-            height: 80px;
-            background-color: #1a73e8;
-            border-radius: 50%;
+            width: 120px;
+            height: 120px;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 20px;
-            color: white;
-            font-size: 32px;
         }
         
         h1 {
@@ -357,6 +353,99 @@
                 transform: translateY(0);
             }
         }
+        
+        /* Race Results Styles */
+        .race-results {
+            background-color: #e8f5e8;
+            border: 2px solid #4caf50;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px 0;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #2e7d32;
+            cursor: pointer;
+        }
+        
+        .results-header i {
+            margin-right: 8px;
+        }
+        
+        .toggle-results-btn {
+            background: none;
+            border: none;
+            color: #2e7d32;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .toggle-results-btn:hover {
+            background-color: rgba(46, 125, 50, 0.1);
+        }
+        
+        .results-content {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .results-content.collapsed {
+            display: none;
+        }
+        
+        .no-results {
+            color: #666;
+            font-style: italic;
+            text-align: center;
+            padding: 10px;
+        }
+        
+        .results-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .race-result-item {
+            background-color: white;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .race-name {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .race-position {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a73e8;
+        }
+        
+        .race-position.first {
+            color: #ffd700;
+        }
+        
+        .race-position.second {
+            color: #c0c0c0;
+        }
+        
+        .race-position.third {
+            color: #cd7f32;
+        }
     </style>
 </head>
 <body>
@@ -364,7 +453,7 @@
         <!-- Login Panel -->
         <div id="login-panel">
             <div class="logo">
-                <img src="img/logo.png" alt="King Of theBay Logo" style="width: 60px; height: 60px; object-fit: contain;">
+                <img src="img/kotb.png" alt="King Of theBay Logo" style="width: 100px; height: 100px; object-fit: contain;">
             </div>
             <h1>King Of theBay</h1>
             <p class="subtitle">Panel Zawodnika</p>
@@ -444,6 +533,25 @@
                 </div>
             </div>
             
+            <!-- Race Results -->
+            <div class="race-results" id="race-results" style="display: none;">
+                <div class="results-header">
+                    <i class="fas fa-trophy"></i>
+                    <span>Moje wyniki</span>
+                    <button class="toggle-results-btn" id="toggle-results-btn">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                </div>
+                <div class="results-content" id="results-content">
+                    <div class="no-results" id="no-results">
+                        Brak wyników wyścigów
+                    </div>
+                    <div class="results-list" id="participant-results-list">
+                        <!-- Results will be displayed here -->
+                    </div>
+                </div>
+            </div>
+            
             <button class="logout-btn" id="logout-btn">
                 <i class="fas fa-sign-out-alt"></i>
                 Wyloguj się
@@ -475,10 +583,12 @@
             document.getElementById('sos-btn').addEventListener('click', sendSOS);
             document.getElementById('logout-btn').addEventListener('click', logout);
             document.getElementById('close-message-btn').addEventListener('click', closeOrganizerMessage);
+            document.getElementById('toggle-results-btn').addEventListener('click', toggleRaceResults);
             
-            // Setup organizer message callback
+            // Setup callbacks
             if (window.trackingCommunication) {
                 window.trackingCommunication.setOrganizerMessageCallback(handleOrganizerMessage);
+                window.trackingCommunication.setRaceResultsCallback(handleRaceResults);
             }
         }
         
@@ -793,9 +903,55 @@
             }
         }
         
+        // Play notification sound for incoming messages
+        function playNotificationSound() {
+            try {
+                // Create audio context for notification sound
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Create a simple notification beep
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                // Set frequency for notification sound (800Hz)
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                oscillator.type = 'sine';
+                
+                // Set volume
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                // Play sound for 0.5 seconds
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+                
+                console.log('Notification sound played');
+            } catch (error) {
+                console.log('Could not play notification sound:', error);
+                
+                // Fallback: try to use system beep if available
+                try {
+                    // Create a short audio element as fallback
+                    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT');
+                    audio.volume = 0.3;
+                    audio.play().catch(() => {
+                        console.log('Fallback audio also failed');
+                    });
+                } catch (fallbackError) {
+                    console.log('Fallback audio failed:', fallbackError);
+                }
+            }
+        }
+        
         // Handle organizer message
         function handleOrganizerMessage(messageData) {
             console.log('Received organizer message:', messageData);
+            
+            // Play notification sound
+            playNotificationSound();
             
             // Update message content
             document.getElementById('message-content').textContent = messageData.message;
@@ -805,10 +961,10 @@
             // Show message panel
             document.getElementById('organizer-message').style.display = 'block';
             
-            // Auto-hide after 10 seconds
+            // Auto-hide after 1 minute (60000 ms)
             setTimeout(() => {
                 closeOrganizerMessage();
-            }, 10000);
+            }, 60000);
         }
         
         // Close organizer message
@@ -822,6 +978,108 @@
                 stopTracking();
             }
         });
+        
+        // Race Results Management
+        let participantRaces = {};
+        
+        // Handle race results from organizer
+        function handleRaceResults(resultsData) {
+            console.log('Received race results:', resultsData);
+            
+            if (resultsData.races) {
+                participantRaces = resultsData.races;
+                updateParticipantResults();
+            }
+        }
+        
+        // Update participant results display
+        function updateParticipantResults() {
+            if (!currentParticipant) return;
+            
+            const participantResultsList = document.getElementById('participant-results-list');
+            const noResults = document.getElementById('no-results');
+            const raceResults = document.getElementById('race-results');
+            
+            // Clear current results
+            participantResultsList.innerHTML = '';
+            
+            // Find results for current participant
+            const myResults = [];
+            Object.values(participantRaces).forEach(race => {
+                if (race.results && race.results[currentParticipant]) {
+                    myResults.push({
+                        raceName: race.name,
+                        position: race.results[currentParticipant]
+                    });
+                }
+            });
+            
+            if (myResults.length === 0) {
+                noResults.style.display = 'block';
+                participantResultsList.style.display = 'none';
+                raceResults.style.display = 'none';
+            } else {
+                noResults.style.display = 'none';
+                participantResultsList.style.display = 'block';
+                raceResults.style.display = 'block';
+                
+                // Sort results by race name
+                myResults.sort((a, b) => a.raceName.localeCompare(b.raceName));
+                
+                myResults.forEach(result => {
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'race-result-item';
+                    
+                    let positionClass = '';
+                    if (result.position === 1) positionClass = 'first';
+                    else if (result.position === 2) positionClass = 'second';
+                    else if (result.position === 3) positionClass = 'third';
+                    
+                    resultItem.innerHTML = `
+                        <span class="race-name">${result.raceName}</span>
+                        <span class="race-position ${positionClass}">${result.position}.</span>
+                    `;
+                    
+                    participantResultsList.appendChild(resultItem);
+                });
+            }
+        }
+        
+        // Toggle race results visibility
+        function toggleRaceResults() {
+            const resultsContent = document.getElementById('results-content');
+            const toggleBtn = document.getElementById('toggle-results-btn');
+            
+            if (resultsContent.classList.contains('collapsed')) {
+                resultsContent.classList.remove('collapsed');
+                toggleBtn.innerHTML = '<i class="fas fa-chevron-down"></i>';
+            } else {
+                resultsContent.classList.add('collapsed');
+                toggleBtn.innerHTML = '<i class="fas fa-chevron-up"></i>';
+            }
+        }
+        
+        // Load saved race results on login
+        function loadSavedResults() {
+            // Try to load from localStorage as fallback
+            const saved = localStorage.getItem('raceResults');
+            if (saved) {
+                try {
+                    participantRaces = JSON.parse(saved);
+                    updateParticipantResults();
+                } catch (e) {
+                    console.error('Error loading saved results:', e);
+                }
+            }
+        }
+        
+        // Update login function to load results
+        const originalLoginParticipant = loginParticipant;
+        loginParticipant = function(number) {
+            originalLoginParticipant(number);
+            loadSavedResults();
+            updateParticipantResults();
+        };
     </script>
 </body>
 </html>
