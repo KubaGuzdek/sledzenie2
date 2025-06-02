@@ -212,29 +212,74 @@ class OrganizerTracking {
     
     // Initialize map
     initializeMap() {
-        // Initialize Leaflet map
+        // Initialize Mapbox map
         const mapElement = document.getElementById('map');
         
         // Clear any existing map
         mapElement.innerHTML = '';
         
-        // Create Leaflet map centered on Zatoka Pucka (Bay of Puck)
-        this.map = L.map('map').setView([54.6960, 18.4310], 13);
-        
-        // Add OpenStreetMap tile layer
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            maxZoom: 19
-        }).addTo(this.map);
-        
-        // Create markers for each participant
-        this.participants.forEach(participant => {
-            if (participant.status !== 'waiting' && participant.position) {
-                this.createParticipantMarker(participant);
-            }
-        });
-        
-        showDebug('Leaflet map initialized');
+        // Fetch Mapbox token from server
+        fetch('/api/mapbox-token')
+            .then(response => response.json())
+            .then(data => {
+                // Set Mapbox access token
+                mapboxgl.accessToken = data.token;
+                
+                // Create Mapbox map centered on Zatoka Pucka (Bay of Puck)
+                this.map = new mapboxgl.Map({
+                    container: 'map',
+                    style: 'mapbox://styles/mapbox/outdoors-v12',
+                    center: [18.4310, 54.6960], // Note: Mapbox uses [longitude, latitude] format
+                    zoom: 13
+                });
+                
+                // Add navigation controls
+                this.map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+                
+                // Wait for map to load before adding markers
+                this.map.on('load', () => {
+                    // Create markers for each participant
+                    this.participants.forEach(participant => {
+                        if (participant.status !== 'waiting' && participant.position) {
+                            this.createParticipantMarker(participant);
+                        }
+                    });
+                });
+                
+                if (window.showDebug) {
+                    window.showDebug('Mapbox map initialized');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching Mapbox token:', error);
+                // Fallback to hardcoded token if fetch fails
+                mapboxgl.accessToken = 'pk.eyJ1Ijoia3ViYWd1emRlayIsImEiOiJjbWI4OXg0NmEwZnB4Mm1zOXc2MW9mdXM3In0.h8OjP7afPMemytiyXz1rDA';
+                
+                // Create Mapbox map centered on Zatoka Pucka (Bay of Puck)
+                this.map = new mapboxgl.Map({
+                    container: 'map',
+                    style: 'mapbox://styles/mapbox/outdoors-v12',
+                    center: [18.4310, 54.6960], // Note: Mapbox uses [longitude, latitude] format
+                    zoom: 13
+                });
+                
+                // Add navigation controls
+                this.map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+                
+                // Wait for map to load before adding markers
+                this.map.on('load', () => {
+                    // Create markers for each participant
+                    this.participants.forEach(participant => {
+                        if (participant.status !== 'waiting' && participant.position) {
+                            this.createParticipantMarker(participant);
+                        }
+                    });
+                });
+                
+                if (window.showDebug) {
+                    window.showDebug('Mapbox map initialized with fallback token');
+                }
+            });
     }
     
     // Create a marker for a participant

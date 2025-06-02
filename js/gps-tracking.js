@@ -484,7 +484,7 @@ class GPSTracker {
     }
 }
 
-// Map visualization class using Leaflet
+// Map visualization class using Mapbox
 class MapVisualizer {
     constructor(mapContainerId) {
         this.mapContainerId = mapContainerId;
@@ -495,69 +495,172 @@ class MapVisualizer {
             return;
         }
         
-        // Initialize Leaflet map
+        // Initialize Mapbox map
         this.initializeMap();
         
         // For route visualization
         this.routePoints = [];
-        this.routeLine = null;
+        this.routeSource = null;
     }
     
-    // Initialize Leaflet map
+    // Initialize Mapbox map
     initializeMap() {
         // Clear any existing content
         this.mapContainer.innerHTML = '';
         
-        // Create a div for the Leaflet map
+        // Create a div for the Mapbox map
         const mapElement = document.createElement('div');
         mapElement.style.width = '100%';
         mapElement.style.height = '100%';
         this.mapContainer.appendChild(mapElement);
         
-        // Create Leaflet map centered on Zatoka Pucka (Bay of Puck)
-        this.map = L.map(mapElement).setView([54.6960, 18.4310], 13);
-        
-        // Add OpenStreetMap tile layer
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            maxZoom: 19
-        }).addTo(this.map);
-        
-        // Create marker for current position
-        const userIcon = L.divIcon({
-            className: 'current-position-icon',
-            iconSize: [20, 20],
-            iconAnchor: [10, 10],
-            html: '<div style="background-color: #1a73e8; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>'
-        });
-        
-        this.currentMarker = L.marker([54.6960, 18.4310], {
-            icon: userIcon,
-            zIndexOffset: 1000
-        }).addTo(this.map);
-        
-        // Create polyline for route tracking
-        this.routeLine = L.polyline([], {
-            color: '#1a73e8',
-            weight: 4,
-            opacity: 0.7,
-            lineJoin: 'round'
-        }).addTo(this.map);
-        
-        if (window.showDebug) {
-            window.showDebug(`Leaflet map initialized in ${this.mapContainerId}`);
-        }
+        // Fetch Mapbox token from server
+        fetch('/api/mapbox-token')
+            .then(response => response.json())
+            .then(data => {
+                // Set Mapbox access token
+                mapboxgl.accessToken = data.token;
+                
+                // Create Mapbox map centered on Zatoka Pucka (Bay of Puck)
+                this.map = new mapboxgl.Map({
+                    container: mapElement,
+                    style: 'mapbox://styles/mapbox/outdoors-v12',
+                    center: [18.4310, 54.6960], // Note: Mapbox uses [longitude, latitude] format
+                    zoom: 13
+                });
+                
+                // Add navigation controls
+                this.map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+                
+                // Create marker element for current position
+                const markerElement = document.createElement('div');
+                markerElement.className = 'current-position-marker';
+                markerElement.style.backgroundColor = '#1a73e8';
+                markerElement.style.width = '20px';
+                markerElement.style.height = '20px';
+                markerElement.style.borderRadius = '50%';
+                markerElement.style.border = '2px solid white';
+                
+                // Create marker for current position
+                this.currentMarker = new mapboxgl.Marker(markerElement)
+                    .setLngLat([18.4310, 54.6960])
+                    .addTo(this.map);
+                
+                // Wait for map to load before adding route line
+                this.map.on('load', () => {
+                    // Add source and layer for route line
+                    this.map.addSource('route', {
+                        'type': 'geojson',
+                        'data': {
+                            'type': 'Feature',
+                            'properties': {},
+                            'geometry': {
+                                'type': 'LineString',
+                                'coordinates': []
+                            }
+                        }
+                    });
+                    
+                    this.map.addLayer({
+                        'id': 'route',
+                        'type': 'line',
+                        'source': 'route',
+                        'layout': {
+                            'line-join': 'round',
+                            'line-cap': 'round'
+                        },
+                        'paint': {
+                            'line-color': '#1a73e8',
+                            'line-width': 4,
+                            'line-opacity': 0.7
+                        }
+                    });
+                    
+                    this.routeSource = this.map.getSource('route');
+                });
+                
+                if (window.showDebug) {
+                    window.showDebug(`Mapbox map initialized in ${this.mapContainerId}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching Mapbox token:', error);
+                // Fallback to hardcoded token if fetch fails
+                mapboxgl.accessToken = 'pk.eyJ1Ijoia3ViYWd1emRlayIsImEiOiJjbWI4OXg0NmEwZnB4Mm1zOXc2MW9mdXM3In0.h8OjP7afPMemytiyXz1rDA';
+                
+                // Create Mapbox map centered on Zatoka Pucka (Bay of Puck)
+                this.map = new mapboxgl.Map({
+                    container: mapElement,
+                    style: 'mapbox://styles/mapbox/outdoors-v12',
+                    center: [18.4310, 54.6960], // Note: Mapbox uses [longitude, latitude] format
+                    zoom: 13
+                });
+                
+                // Add navigation controls
+                this.map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+                
+                // Create marker element for current position
+                const markerElement = document.createElement('div');
+                markerElement.className = 'current-position-marker';
+                markerElement.style.backgroundColor = '#1a73e8';
+                markerElement.style.width = '20px';
+                markerElement.style.height = '20px';
+                markerElement.style.borderRadius = '50%';
+                markerElement.style.border = '2px solid white';
+                
+                // Create marker for current position
+                this.currentMarker = new mapboxgl.Marker(markerElement)
+                    .setLngLat([18.4310, 54.6960])
+                    .addTo(this.map);
+                
+                // Wait for map to load before adding route line
+                this.map.on('load', () => {
+                    // Add source and layer for route line
+                    this.map.addSource('route', {
+                        'type': 'geojson',
+                        'data': {
+                            'type': 'Feature',
+                            'properties': {},
+                            'geometry': {
+                                'type': 'LineString',
+                                'coordinates': []
+                            }
+                        }
+                    });
+                    
+                    this.map.addLayer({
+                        'id': 'route',
+                        'type': 'line',
+                        'source': 'route',
+                        'layout': {
+                            'line-join': 'round',
+                            'line-cap': 'round'
+                        },
+                        'paint': {
+                            'line-color': '#1a73e8',
+                            'line-width': 4,
+                            'line-opacity': 0.7
+                        }
+                    });
+                    
+                    this.routeSource = this.map.getSource('route');
+                });
+                
+                if (window.showDebug) {
+                    window.showDebug(`Mapbox map initialized in ${this.mapContainerId} with fallback token`);
+                }
+            });
     }
     
     // Update current position marker
     updatePosition(latitude, longitude) {
         if (!this.map || !this.currentMarker) return;
         
-        // Update marker position
-        this.currentMarker.setLatLng([latitude, longitude]);
+        // Update marker position (note Mapbox uses [lng, lat] format)
+        this.currentMarker.setLngLat([longitude, latitude]);
         
         // Center map on current position
-        this.map.panTo([latitude, longitude]);
+        this.map.panTo([longitude, latitude]);
         
         // Add point to route
         this.routePoints.push({
@@ -577,20 +680,34 @@ class MapVisualizer {
     
     // Update route path visualization
     updateRoutePath() {
-        if (!this.map || !this.routeLine) return;
+        if (!this.map || !this.routeSource || !this.map.loaded()) return;
         
-        // Convert route points to LatLng array
-        const latLngs = this.routePoints.map(point => [point.lat, point.lng]);
+        // Convert route points to GeoJSON coordinates array [lng, lat]
+        const coordinates = this.routePoints.map(point => [point.lng, point.lat]);
         
-        // Update polyline
-        this.routeLine.setLatLngs(latLngs);
+        // Update route source data
+        this.routeSource.setData({
+            'type': 'Feature',
+            'properties': {},
+            'geometry': {
+                'type': 'LineString',
+                'coordinates': coordinates
+            }
+        });
     }
     
     // Clear route visualization
     clearRoute() {
         this.routePoints = [];
-        if (this.routeLine) {
-            this.routeLine.setLatLngs([]);
+        if (this.routeSource && this.map.loaded()) {
+            this.routeSource.setData({
+                'type': 'Feature',
+                'properties': {},
+                'geometry': {
+                    'type': 'LineString',
+                    'coordinates': []
+                }
+            });
         }
     }
     
@@ -599,39 +716,49 @@ class MapVisualizer {
         if (!this.map || this.routePoints.length < 2) return;
         
         // Remove existing markers
-        if (this.startMarker) this.map.removeLayer(this.startMarker);
-        if (this.endMarker) this.map.removeLayer(this.endMarker);
+        if (this.startMarker) this.startMarker.remove();
+        if (this.endMarker) this.endMarker.remove();
         
-        // Create start marker
-        const startIcon = L.divIcon({
-            className: 'start-marker-icon',
-            iconSize: [20, 20],
-            iconAnchor: [10, 10],
-            html: '<div style="background-color: #4caf50; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>'
-        });
+        // Create start marker element
+        const startMarkerEl = document.createElement('div');
+        startMarkerEl.className = 'start-marker';
+        startMarkerEl.style.backgroundColor = '#4caf50';
+        startMarkerEl.style.width = '20px';
+        startMarkerEl.style.height = '20px';
+        startMarkerEl.style.borderRadius = '50%';
+        startMarkerEl.style.border = '2px solid white';
         
-        this.startMarker = L.marker([this.routePoints[0].lat, this.routePoints[0].lng], {
-            icon: startIcon
-        }).addTo(this.map);
+        // Add start marker to map
+        this.startMarker = new mapboxgl.Marker(startMarkerEl)
+            .setLngLat([this.routePoints[0].lng, this.routePoints[0].lat])
+            .addTo(this.map);
         
-        // Create end marker
-        const endIcon = L.divIcon({
-            className: 'end-marker-icon',
-            iconSize: [20, 20],
-            iconAnchor: [10, 10],
-            html: '<div style="background-color: #f44336; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>'
-        });
+        // Create end marker element
+        const endMarkerEl = document.createElement('div');
+        endMarkerEl.className = 'end-marker';
+        endMarkerEl.style.backgroundColor = '#f44336';
+        endMarkerEl.style.width = '20px';
+        endMarkerEl.style.height = '20px';
+        endMarkerEl.style.borderRadius = '50%';
+        endMarkerEl.style.border = '2px solid white';
         
+        // Add end marker to map
         const lastPoint = this.routePoints[this.routePoints.length - 1];
-        this.endMarker = L.marker([lastPoint.lat, lastPoint.lng], {
-            icon: endIcon
-        }).addTo(this.map);
+        this.endMarker = new mapboxgl.Marker(endMarkerEl)
+            .setLngLat([lastPoint.lng, lastPoint.lat])
+            .addTo(this.map);
         
         // Fit map to show the entire route
-        const bounds = this.routeLine.getBounds();
-        this.map.fitBounds(bounds, {
-            padding: [50, 50]
-        });
+        if (this.routePoints.length >= 2) {
+            const bounds = this.routePoints.reduce((bounds, point) => {
+                return bounds.extend([point.lng, point.lat]);
+            }, new mapboxgl.LngLatBounds([this.routePoints[0].lng, this.routePoints[0].lat], 
+                                         [this.routePoints[0].lng, this.routePoints[0].lat]));
+            
+            this.map.fitBounds(bounds, {
+                padding: 50
+            });
+        }
     }
     
     // Update distance label
@@ -639,25 +766,21 @@ class MapVisualizer {
         // Create or update distance control
         if (!this.distanceControl) {
             // Create a custom control for displaying distance
-            this.distanceControl = L.control({position: 'bottomleft'});
+            const distanceDiv = document.createElement('div');
+            distanceDiv.className = 'distance-label mapboxgl-ctrl';
+            distanceDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+            distanceDiv.style.padding = '5px 10px';
+            distanceDiv.style.borderRadius = '4px';
+            distanceDiv.style.fontWeight = 'bold';
+            distanceDiv.style.margin = '10px';
+            distanceDiv.innerHTML = `Trasa: ${distance.toFixed(1)} km`;
             
-            this.distanceControl.onAdd = (map) => {
-                const div = L.DomUtil.create('div', 'distance-label');
-                div.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
-                div.style.padding = '5px 10px';
-                div.style.borderRadius = '4px';
-                div.style.fontWeight = 'bold';
-                div.innerHTML = `Trasa: ${distance.toFixed(1)} km`;
-                return div;
-            };
-            
-            this.distanceControl.addTo(this.map);
+            // Add to map container
+            this.mapContainer.appendChild(distanceDiv);
+            this.distanceControl = distanceDiv;
         } else {
             // Update existing control
-            const label = document.querySelector('.distance-label');
-            if (label) {
-                label.innerHTML = `Trasa: ${distance.toFixed(1)} km`;
-            }
+            this.distanceControl.innerHTML = `Trasa: ${distance.toFixed(1)} km`;
         }
     }
 }
@@ -726,203 +849,143 @@ class TrackingApp {
         this.loadSettings();
     }
     
-    // Set up GPS tracker callbacks
+    // Set up callbacks
     setupCallbacks() {
-        // Position update callback
+        // Set up GPS tracker callbacks
         this.gpsTracker.onPositionUpdate = (position) => {
-            // Update map visualization
-            this.liveMapVisualizer.updatePosition(position.latitude, position.longitude);
+            // Update map with new position
+            if (this.liveMapVisualizer) {
+                this.liveMapVisualizer.updatePosition(position.latitude, position.longitude);
+            }
         };
         
-        // Speed update callback
         this.gpsTracker.onSpeedUpdate = (currentSpeed, maxSpeed) => {
             // Update speed display
-            const speedDisplay = document.querySelector('#map-screen .stat-value');
-            if (speedDisplay) {
-                speedDisplay.textContent = currentSpeed.toFixed(1);
+            const speedElement = document.getElementById('current-speed');
+            if (speedElement) {
+                speedElement.textContent = `${currentSpeed.toFixed(1)} km/h`;
+            }
+            
+            const maxSpeedElement = document.getElementById('max-speed');
+            if (maxSpeedElement) {
+                maxSpeedElement.textContent = `${maxSpeed.toFixed(1)} km/h`;
             }
         };
         
-        // Distance update callback
-        this.gpsTracker.onDistanceUpdate = (totalDistance) => {
-            // Convert meters to kilometers
-            const distanceKm = totalDistance / 1000;
-            
+        this.gpsTracker.onDistanceUpdate = (distance) => {
             // Update distance display
-            const distanceDisplay = document.querySelectorAll('#map-screen .stat-value')[1];
-            if (distanceDisplay) {
-                distanceDisplay.textContent = distanceKm.toFixed(1);
+            const distanceElement = document.getElementById('total-distance');
+            if (distanceElement) {
+                distanceElement.textContent = `${(distance / 1000).toFixed(2)} km`;
             }
             
-            // Update map label
-            this.liveMapVisualizer.updateDistanceLabel(distanceKm);
+            // Update map distance label
+            if (this.liveMapVisualizer) {
+                this.liveMapVisualizer.updateDistanceLabel(distance / 1000);
+            }
         };
         
-        // GPS status change callback
         this.gpsTracker.onGPSStatusChange = (status, message) => {
             this.updateGPSStatusUI(status, message);
         };
         
-        // Error callback
         this.gpsTracker.onError = (errorMessage) => {
+            // Show error message
             alert(`GPS Error: ${errorMessage}`);
         };
     }
     
-    // Start GPS tracking
+    // Start tracking
     startTracking() {
-        // Switch to map screen
-        showScreen('map-screen');
-        
-        // Clear previous route visualization
-        this.liveMapVisualizer.clearRoute();
-        
-        // Start GPS tracking
         this.gpsTracker.startTracking();
     }
     
-    // Stop GPS tracking and show summary
+    // Stop tracking
     stopTracking() {
-        // Get tracking summary
         const summary = this.gpsTracker.stopTracking();
-        
-        if (!summary) {
-            alert("No tracking data available");
-            return;
+        if (summary) {
+            this.showTrackingSummary(summary);
         }
-        
-        // Initialize summary map visualizer
-        this.summaryMapVisualizer = new MapVisualizer('summary-screen');
-        
-        // Copy route points from live map to summary map
-        this.summaryMapVisualizer.routePoints = [...this.liveMapVisualizer.routePoints];
-        this.summaryMapVisualizer.updateRoutePath();
-        this.summaryMapVisualizer.addRouteMarkers(summary.startPosition, summary.endPosition);
-        this.summaryMapVisualizer.updateDistanceLabel(summary.distance);
-        
-        // Update summary stats
-        const summaryStats = document.querySelectorAll('#summary-screen .stat-value');
-        if (summaryStats.length >= 4) {
-            summaryStats[0].textContent = summary.distance.toFixed(1); // Distance
-            summaryStats[1].textContent = summary.averageSpeed.toFixed(1); // Avg speed
-            summaryStats[2].textContent = summary.maxSpeed.toFixed(1); // Max speed
-            summaryStats[3].textContent = summary.duration; // Duration in minutes
-        }
-        
-        // Switch to summary screen
-        showScreen('summary-screen');
     }
     
     // Send SOS signal
     sendSOS() {
         const sosData = this.gpsTracker.sendSOS();
-        
-        // In a real application, this would send the SOS data to a server
-        // For now, we'll just show an alert
-        alert(`SOS sygnał wysłany! Pomoc jest w drodze.\nTwoja pozycja: ${sosData.position ? `${sosData.position.latitude.toFixed(6)}, ${sosData.position.longitude.toFixed(6)}` : 'Nieznana'}`);
+        alert('SOS signal sent to organizers!');
     }
     
-    // Update GPS status indicators in UI
+    // Update GPS status UI
     updateGPSStatusUI(status, message) {
-        const statusIcon = document.querySelector('#home-screen .status-icon');
-        const statusText = document.querySelector('#home-screen .status-text');
+        const statusElement = document.getElementById('gps-status');
+        if (!statusElement) return;
         
-        if (!statusIcon || !statusText) return;
-        
-        // Remove all status classes
-        statusIcon.classList.remove('status-good', 'status-warning', 'status-bad');
-        
-        // Add appropriate class based on status
-        switch (status) {
-            case 'good':
-                statusIcon.classList.add('status-good');
-                break;
-            case 'warning':
-                statusIcon.classList.add('status-warning');
-                break;
-            case 'bad':
-            case 'error':
-                statusIcon.classList.add('status-bad');
-                break;
-        }
-        
-        // Update status text
-        statusText.textContent = message;
+        // Update status indicator
+        statusElement.className = `gps-status ${status}`;
+        statusElement.textContent = message;
     }
     
-    // Save user settings to localStorage
-    saveSettings() {
-        const nameInput = document.getElementById('name');
-        const sailNumberInput = document.getElementById('sail-number');
-        const selectedColor = document.querySelector('.color-option.selected');
-        
-        if (nameInput) {
-            localStorage.setItem('userName', nameInput.value);
+    // Show tracking summary
+    showTrackingSummary(summary) {
+        // Create summary map if needed
+        if (!this.summaryMapVisualizer) {
+            this.summaryMapVisualizer = new MapVisualizer('summary-screen');
         }
         
-        if (sailNumberInput) {
-            localStorage.setItem('sailNumber', sailNumberInput.value);
+        // Update summary UI
+        const distanceElement = document.getElementById('summary-distance');
+        if (distanceElement) {
+            distanceElement.textContent = `${summary.distance.toFixed(2)} km`;
         }
         
-        if (selectedColor) {
-            localStorage.setItem('trackingColor', selectedColor.style.backgroundColor);
+        const durationElement = document.getElementById('summary-duration');
+        if (durationElement) {
+            const hours = Math.floor(summary.duration / 60);
+            const minutes = summary.duration % 60;
+            durationElement.textContent = `${hours}h ${minutes}m`;
         }
         
-        // Show confirmation
-        alert('Ustawienia zostały zapisane');
-        
-        // Return to home screen
-        showScreen('home-screen');
-    }
-    
-    // Load user settings from localStorage
-    loadSettings() {
-        const nameInput = document.getElementById('name');
-        const sailNumberInput = document.getElementById('sail-number');
-        const colorOptions = document.querySelectorAll('.color-option');
-        
-        // Load name
-        if (nameInput && localStorage.getItem('userName')) {
-            nameInput.value = localStorage.getItem('userName');
+        const speedElement = document.getElementById('summary-speed');
+        if (speedElement) {
+            speedElement.textContent = `${summary.averageSpeed.toFixed(1)} km/h`;
         }
         
-        // Load sail number
-        if (sailNumberInput && localStorage.getItem('sailNumber')) {
-            sailNumberInput.value = localStorage.getItem('sailNumber');
+        const maxSpeedElement = document.getElementById('summary-max-speed');
+        if (maxSpeedElement) {
+            maxSpeedElement.textContent = `${summary.maxSpeed.toFixed(1)} km/h`;
         }
         
-        // Load tracking color
-        const savedColor = localStorage.getItem('trackingColor');
-        if (savedColor && colorOptions.length > 0) {
-            // Find matching color option
-            let found = false;
-            colorOptions.forEach(option => {
-                if (option.style.backgroundColor === savedColor) {
-                    // Remove selected class from all options
-                    colorOptions.forEach(opt => opt.classList.remove('selected'));
-                    // Add selected class to matching option
-                    option.classList.add('selected');
-                    found = true;
-                }
+        // Add route to summary map
+        if (this.summaryMapVisualizer && summary.path.length > 0) {
+            // Add each point to route
+            summary.path.forEach(point => {
+                this.summaryMapVisualizer.updatePosition(point.latitude, point.longitude);
             });
             
-            // If no matching color found, select first option
-            if (!found) {
-                colorOptions[0].classList.add('selected');
-            }
+            // Add start and end markers
+            this.summaryMapVisualizer.addRouteMarkers(summary.startPosition, summary.endPosition);
+        }
+    }
+    
+    // Save settings
+    saveSettings() {
+        const nameInput = document.getElementById('user-name');
+        const sailNumberInput = document.getElementById('sail-number');
+        
+        if (nameInput && sailNumberInput) {
+            localStorage.setItem('userName', nameInput.value);
+            localStorage.setItem('sailNumber', sailNumberInput.value);
+            alert('Settings saved!');
+        }
+    }
+    
+    // Load settings
+    loadSettings() {
+        const nameInput = document.getElementById('user-name');
+        const sailNumberInput = document.getElementById('sail-number');
+        
+        if (nameInput && sailNumberInput) {
+            nameInput.value = localStorage.getItem('userName') || '';
+            sailNumberInput.value = localStorage.getItem('sailNumber') || '';
         }
     }
 }
-
-// Initialize the application when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Create and initialize the tracking app
-    window.trackingApp = new TrackingApp();
-    
-    // Make it available globally for debugging
-    console.log("GPS Tracking initialized");
-    
-    if (window.showDebug) {
-        window.showDebug('GPS Tracking module initialized');
-    }
-});

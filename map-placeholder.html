@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Map Placeholders</title>
+    <!-- Mapbox CSS -->
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
     <style>
         body {
             font-family: 'Roboto', 'Segoe UI', sans-serif;
@@ -13,77 +15,13 @@
         }
         
         .map-container {
-            width: 400px;
-            height: 400px;
-            background-color: #64b5f6;
+            width: 50vw;
+            height: 50vh;
             border-radius: 12px;
             margin: 20px 0;
             position: relative;
             overflow: hidden;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .live-map {
-            background: linear-gradient(135deg, #64b5f6 0%, #1a73e8 100%);
-            position: relative;
-        }
-        
-        .route-map {
-            background: linear-gradient(135deg, #64b5f6 0%, #0d47a1 100%);
-            position: relative;
-        }
-        
-        .map-grid {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
-            background-size: 20px 20px;
-        }
-        
-        .map-marker {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            background-color: #ffffff;
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 0 0 4px rgba(255,255,255,0.3);
-        }
-        
-        .current-position {
-            top: 50%;
-            left: 50%;
-            animation: pulse 2s infinite;
-        }
-        
-        .route-path {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            fill: none;
-            stroke: #ffffff;
-            stroke-width: 3;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-        
-        .start-marker {
-            top: 70%;
-            left: 20%;
-            background-color: #4caf50;
-        }
-        
-        .end-marker {
-            top: 30%;
-            left: 80%;
-            background-color: #f44336;
         }
         
         .map-label {
@@ -95,6 +33,7 @@
             background-color: rgba(0,0,0,0.3);
             padding: 5px 10px;
             border-radius: 4px;
+            z-index: 10;
         }
         
         .compass {
@@ -109,6 +48,31 @@
             justify-content: center;
             align-items: center;
             font-weight: bold;
+            z-index: 10;
+        }
+        
+        h2 {
+            color: #1a73e8;
+        }
+        
+        .marker {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            box-shadow: 0 0 0 4px rgba(255,255,255,0.3);
+        }
+        
+        .current-position {
+            background-color: #ffffff;
+            animation: pulse 2s infinite;
+        }
+        
+        .start-marker {
+            background-color: #4caf50;
+        }
+        
+        .end-marker {
+            background-color: #f44336;
         }
         
         @keyframes pulse {
@@ -122,31 +86,147 @@
                 box-shadow: 0 0 0 0 rgba(255,255,255,0);
             }
         }
-        
-        h2 {
-            color: #1a73e8;
-        }
     </style>
 </head>
 <body>
-    <h2>Live Map Placeholder</h2>
-    <div class="map-container live-map">
-        <div class="map-grid"></div>
-        <div class="map-marker current-position"></div>
+    <h2>Live Map</h2>
+    <div class="map-container" id="live-map">
         <div class="compass">N</div>
         <div class="map-label">Zatoka Pucka</div>
     </div>
     
-    <h2>Route Summary Placeholder</h2>
-    <div class="map-container route-map">
-        <div class="map-grid"></div>
-        <svg class="route-path" viewBox="0 0 400 400">
-            <path d="M80,280 C120,260 150,240 180,200 C210,160 240,140 320,120" />
-        </svg>
-        <div class="map-marker start-marker"></div>
-        <div class="map-marker end-marker"></div>
+    <h2>Route Summary</h2>
+    <div class="map-container" id="route-map">
         <div class="compass">N</div>
         <div class="map-label">Trasa: 8.7 km</div>
     </div>
+
+    <!-- Mapbox JS -->
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+    <script>
+        // Fetch Mapbox token from server
+        fetch('/api/mapbox-token')
+            .then(response => response.json())
+            .then(data => {
+                // Initialize Mapbox with the token from server
+                mapboxgl.accessToken = data.token;
+                
+                // Initialize maps after token is set
+                initializeMaps();
+            })
+            .catch(error => {
+                console.error('Error fetching Mapbox token:', error);
+                // Fallback to hardcoded token if fetch fails
+                mapboxgl.accessToken = 'pk.eyJ1Ijoia3ViYWd1emRlayIsImEiOiJjbWI4OXg0NmEwZnB4Mm1zOXc2MW9mdXM3In0.h8OjP7afPMemytiyXz1rDA';
+                initializeMaps();
+            });
+            
+        // Function to initialize maps
+        function initializeMaps() {
+            // Coordinates for Zatoka Pucka (Bay of Puck)
+            const centerCoordinates = [18.4310, 54.6960];
+            
+            // Initialize live map
+            const liveMap = new mapboxgl.Map({
+                container: 'live-map',
+                style: 'mapbox://styles/mapbox/outdoors-v12',
+                center: centerCoordinates,
+                zoom: 12
+            });
+            
+            // Add navigation controls to live map
+            liveMap.addControl(new mapboxgl.NavigationControl(), 'top-right');
+            
+            // Add current position marker to live map
+            liveMap.on('load', function() {
+                // Create a DOM element for the marker
+                const currentPositionEl = document.createElement('div');
+                currentPositionEl.className = 'marker current-position';
+                
+                // Add marker to map
+                new mapboxgl.Marker(currentPositionEl)
+                    .setLngLat(centerCoordinates)
+                    .addTo(liveMap);
+            });
+            
+            // Initialize route map
+            const routeMap = new mapboxgl.Map({
+                container: 'route-map',
+                style: 'mapbox://styles/mapbox/outdoors-v12',
+                center: centerCoordinates,
+                zoom: 12
+            });
+            
+            // Add navigation controls to route map
+            routeMap.addControl(new mapboxgl.NavigationControl(), 'top-right');
+            
+            // Add route and markers to route map
+            routeMap.on('load', function() {
+                // Sample route coordinates
+                const routeCoordinates = [
+                    [18.4210, 54.6860], // Start
+                    [18.4250, 54.6880],
+                    [18.4300, 54.6900],
+                    [18.4350, 54.6920],
+                    [18.4400, 54.6940],
+                    [18.4450, 54.6960], // End
+                ];
+                
+                // Add route line
+                routeMap.addSource('route', {
+                    'type': 'geojson',
+                    'data': {
+                        'type': 'Feature',
+                        'properties': {},
+                        'geometry': {
+                            'type': 'LineString',
+                            'coordinates': routeCoordinates
+                        }
+                    }
+                });
+                
+                routeMap.addLayer({
+                    'id': 'route',
+                    'type': 'line',
+                    'source': 'route',
+                    'layout': {
+                        'line-join': 'round',
+                        'line-cap': 'round'
+                    },
+                    'paint': {
+                        'line-color': '#ffffff',
+                        'line-width': 3
+                    }
+                });
+                
+                // Create start marker
+                const startMarkerEl = document.createElement('div');
+                startMarkerEl.className = 'marker start-marker';
+                
+                // Add start marker to map
+                new mapboxgl.Marker(startMarkerEl)
+                    .setLngLat(routeCoordinates[0])
+                    .addTo(routeMap);
+                
+                // Create end marker
+                const endMarkerEl = document.createElement('div');
+                endMarkerEl.className = 'marker end-marker';
+                
+                // Add end marker to map
+                new mapboxgl.Marker(endMarkerEl)
+                    .setLngLat(routeCoordinates[routeCoordinates.length - 1])
+                    .addTo(routeMap);
+                
+                // Fit map to show the entire route
+                const bounds = routeCoordinates.reduce(function(bounds, coord) {
+                    return bounds.extend(coord);
+                }, new mapboxgl.LngLatBounds(routeCoordinates[0], routeCoordinates[0]));
+                
+                routeMap.fitBounds(bounds, {
+                    padding: 50
+                });
+            });
+        }
+    </script>
 </body>
 </html>

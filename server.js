@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
@@ -297,6 +298,11 @@ app.get('/api/race-results', (req, res) => {
         results[key] = value;
     });
     res.json({ races: results });
+});
+
+// API endpoint to get Mapbox token
+app.get('/api/mapbox-token', (req, res) => {
+    res.json({ token: process.env.MAPBOX_TOKEN });
 });
 
 // Health check endpoint

@@ -7,8 +7,9 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+    <script src="js/regatta-buoys.js"></script>
     <style>
         body {
             margin: 0;
@@ -49,7 +50,7 @@
         
         .main-container {
             display: grid;
-            grid-template-columns: 280px 1fr 200px;
+            grid-template-columns: 280px 1fr;
             grid-template-rows: 1fr;
             height: calc(100vh - 50px);
             min-height: 800px;
@@ -64,7 +65,7 @@
         .map-and-controls-container {
             display: flex;
             flex-direction: column;
-            height: 500px;
+            height: 50vh;
             flex-shrink: 0;
         }
         
@@ -150,6 +151,7 @@
         .map-container {
             position: relative;
             background-color: #f0f0f0;
+            height: 100%;
         }
         
         #map {
@@ -227,35 +229,6 @@
         
         .status-inactive {
             background-color: #ccc;
-        }
-        
-        .legend-panel {
-            background-color: white;
-            border-left: 1px solid #e0e0e0;
-            padding: 20px;
-            overflow-y: auto;
-        }
-        
-        .legend {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .legend h4 {
-            margin: 0 0 10px 0;
-            font-size: 14px;
-            color: #333;
-        }
-        
-        .legend-item {
-            display: flex;
-            align-items: center;
-            margin: 5px 0;
-            font-size: 12px;
-            color: #666;
         }
         
         /* Custom marker styles */
@@ -474,6 +447,95 @@
         .delete-result:hover {
             background-color: #ffe6e6;
         }
+        
+        /* Buoy Management Styles */
+        .buoy-management {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .buoy-list-container, .buoy-edit-container {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .buoy-list-container h4, .buoy-edit-container h4 {
+            margin: 0 0 15px 0;
+            color: #1a73e8;
+            font-size: 16px;
+        }
+        
+        .buoy-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            background-color: white;
+            margin-bottom: 10px;
+        }
+        
+        .buoy-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .buoy-item:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .buoy-item.selected {
+            background-color: rgba(26, 115, 232, 0.1);
+        }
+        
+        .buoy-item:last-child {
+            border-bottom: none;
+        }
+        
+        .buoy-name {
+            font-weight: 600;
+            color: #1a73e8;
+        }
+        
+        .buoy-coordinates {
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .buoy-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #333;
+        }
     </style>
 </head>
 <body>
@@ -511,6 +573,9 @@
                         <button class="map-control-btn" id="center-map" title="Wyśrodkuj mapę">
                             <i class="fas fa-crosshairs"></i>
                         </button>
+                        <button class="map-control-btn" id="toggle-buoys" title="Pokaż/ukryj boje regatowe">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </button>
                     </div>
                     
                     <div class="participant-info" id="participant-info">
@@ -524,622 +589,319 @@
             
             <!-- Bottom Panels under Map -->
             <div class="bottom-panels">
-            <!-- Message Panel -->
-            <div class="bottom-panel">
-                <div class="message-title">Komunikat dla zawodników</div>
-                <textarea id="message-input" placeholder="Wpisz komunikat dla wszystkich zawodników..." maxlength="200"></textarea>
-                <button id="send-message-btn" class="send-message-btn">
-                    <i class="fas fa-paper-plane"></i>
-                    Wyślij komunikat
-                </button>
-            </div>
-            
-            <!-- Race Results Panel -->
-            <div class="bottom-panel">
-                <div class="race-results-title">Wyniki wyścigów</div>
-                <div class="race-controls">
-                    <select id="race-select">
-                        <option value="">Wybierz wyścig</option>
-                    </select>
-                    <button id="new-race-btn" class="race-btn">
-                        <i class="fas fa-plus"></i> Nowy wyścig
+                <!-- Message Panel -->
+                <div class="bottom-panel">
+                    <div class="message-title">Komunikat dla zawodników</div>
+                    <textarea id="message-input" placeholder="Wpisz komunikat dla wszystkich zawodników..." maxlength="200"></textarea>
+                    <button id="send-message-btn" class="send-message-btn">
+                        <i class="fas fa-paper-plane"></i>
+                        Wyślij komunikat
                     </button>
                 </div>
-                <div id="race-results-content" style="display: none;">
-                    <div class="race-info">
-                        <h4 id="current-race-title">Wyścig 1</h4>
-                        <div class="result-input-section">
-                            <label for="participant-select">Zawodnik:</label>
-                            <select id="participant-select">
-                                <option value="">Wybierz zawodnika</option>
-                            </select>
-                            <label for="position-input">Miejsce:</label>
-                            <input type="number" id="position-input" min="1" max="200" placeholder="1">
-                            <button id="add-result-btn" class="race-btn">Dodaj wynik</button>
+                
+                <!-- Buoy Management Panel -->
+                <div class="bottom-panel">
+                    <div class="race-results-title">Zarządzanie bojami</div>
+                    <div class="buoy-management">
+                        <div class="buoy-list-container">
+                            <h4>Lista boi</h4>
+                            <div id="buoy-list" class="buoy-list modern-list">
+                                <!-- Buoys will be listed here -->
+                            </div>
+                            <button id="add-buoy-btn" class="modern-btn success-btn">
+                                <i class="fas fa-plus"></i> Dodaj boję
+                            </button>
                         </div>
-                        <div class="results-list" id="results-list">
-                            <!-- Results will be displayed here -->
+                        <div class="buoy-edit-container" id="buoy-edit-container">
+                            <h4>Edycja boi</h4>
+                            <div class="form-group">
+                                <label for="buoy-name" class="modern-label">Nazwa boi:</label>
+                                <input type="text" id="buoy-name" class="modern-input" placeholder="np. A, Start, Meta">
+                            </div>
+                            <div class="form-group">
+                                <label for="buoy-lat" class="modern-label">Szerokość geograficzna:</label>
+                                <input type="number" id="buoy-lat" class="modern-input" step="0.0001" placeholder="np. 54.6950">
+                            </div>
+                            <div class="form-group">
+                                <label for="buoy-lng" class="modern-label">Długość geograficzna:</label>
+                                <input type="number" id="buoy-lng" class="modern-input" step="0.0001" placeholder="np. 18.4050">
+                            </div>
+                            <div class="buoy-actions">
+                                <button id="save-buoy-btn" class="modern-btn primary-btn">
+                                    <i class="fas fa-save"></i> Zapisz
+                                </button>
+                                <button id="delete-buoy-btn" class="modern-btn danger-btn">
+                                    <i class="fas fa-trash"></i> Usuń
+                                </button>
+                                <button id="cancel-buoy-edit-btn" class="modern-btn neutral-btn">
+                                    <i class="fas fa-times"></i> Anuluj
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-        
-        <div class="legend-panel">
-            <div class="legend">
-                <h4>Legenda</h4>
-                <div class="legend-item">
-                    <span class="status-indicator status-active"></span>
-                    Aktywny (śledzenie włączone)
-                </div>
-                <div class="legend-item">
-                    <span class="status-indicator status-inactive"></span>
-                    Nieaktywny
-                </div>
-                <div class="legend-item">
-                    <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; background-color: #ff4444; animation: sosFlash 1s infinite;"></span>
-                    SOS - Potrzebuje pomocy
+                
+                <!-- Race Results Panel -->
+                <div class="bottom-panel">
+                    <div class="race-results-title">Wyniki wyścigów</div>
+                    <div class="race-controls">
+                        <select id="race-select">
+                            <option value="">Wybierz wyścig</option>
+                        </select>
+                        <button id="new-race-btn" class="race-btn">
+                            <i class="fas fa-plus"></i> Nowy wyścig
+                        </button>
+                    </div>
+                    <div id="race-results-content" style="display: none;">
+                        <div class="race-info">
+                            <h4 id="current-race-title">Wyścig 1</h4>
+                            <div class="result-input-section">
+                                <label for="participant-select">Zawodnik:</label>
+                                <select id="participant-select">
+                                    <option value="">Wybierz zawodnika</option>
+                                </select>
+                                <label for="position-input">Miejsce:</label>
+                                <input type="number" id="position-input" min="1" max="200" placeholder="1">
+                                <button id="add-result-btn" class="race-btn">Dodaj wynik</button>
+                            </div>
+                            <div class="results-list" id="results-list">
+                                <!-- Results will be displayed here -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     
     <script src="js/tracking-communication.js"></script>
+    <script src="js/organizer-map.js"></script>
+    
     <script>
-        let map;
-        let participants = {};
-        let selectedParticipant = null;
-        
-        // Initialize the application
+        // Add toggle buoys functionality
         document.addEventListener('DOMContentLoaded', function() {
-            initializeParticipants();
-            initializeMap();
-            setupEventListeners();
-            startTracking();
-            initializeRaceResults();
-            loadSavedRaceResults();
+            const toggleBuoysBtn = document.getElementById('toggle-buoys');
+            let buoysVisible = true;
+            
+            if (toggleBuoysBtn) {
+                toggleBuoysBtn.addEventListener('click', function() {
+                    buoysVisible = !buoysVisible;
+                    toggleBuoyVisibility(buoysVisible);
+                    
+                    // Update button style to indicate state
+                    if (buoysVisible) {
+                        toggleBuoysBtn.style.backgroundColor = '#fff';
+                        toggleBuoysBtn.style.color = '#333';
+                    } else {
+                        toggleBuoysBtn.style.backgroundColor = '#e0e0e0';
+                        toggleBuoysBtn.style.color = '#999';
+                    }
+                });
+            }
+            
+            // Initialize buoy management
+            initBuoyManagement();
         });
         
-        // Generate participants 1-200
-        function initializeParticipants() {
-            const grid = document.getElementById('participants-grid');
+        // Buoy management functionality
+        let selectedBuoyIndex = -1;
+        
+        function initBuoyManagement() {
+            // Get DOM elements
+            const buoyList = document.getElementById('buoy-list');
+            const addBuoyBtn = document.getElementById('add-buoy-btn');
+            const saveBuoyBtn = document.getElementById('save-buoy-btn');
+            const deleteBuoyBtn = document.getElementById('delete-buoy-btn');
+            const cancelBuoyEditBtn = document.getElementById('cancel-buoy-edit-btn');
+            const buoyNameInput = document.getElementById('buoy-name');
+            const buoyLatInput = document.getElementById('buoy-lat');
+            const buoyLngInput = document.getElementById('buoy-lng');
             
-            for (let i = 1; i <= 200; i++) {
-                const participantDiv = document.createElement('div');
-                participantDiv.className = 'participant-number';
-                participantDiv.textContent = i;
-                participantDiv.dataset.number = i;
+            // Load buoys and populate list
+            updateBuoyList();
+            
+            // Add event listeners
+            addBuoyBtn.addEventListener('click', function() {
+                // Clear form and set to add mode
+                clearBuoyForm();
+                selectedBuoyIndex = -1;
+            });
+            
+            saveBuoyBtn.addEventListener('click', function() {
+                saveBuoy();
+            });
+            
+            deleteBuoyBtn.addEventListener('click', function() {
+                deleteBuoyConfirm();
+            });
+            
+            cancelBuoyEditBtn.addEventListener('click', function() {
+                clearBuoyForm();
+                selectedBuoyIndex = -1;
+            });
+        }
+        
+        function updateBuoyList() {
+            const buoyList = document.getElementById('buoy-list');
+            buoyList.innerHTML = '';
+            
+            // Get buoys from regatta-buoys module
+            const buoys = window.regattaBuoys.getAllBuoys();
+            
+            if (!buoys || buoys.length === 0) {
+                buoyList.innerHTML = '<div style="padding: 10px; text-align: center; color: #666;">Brak boi</div>';
+                return;
+            }
+            
+            // Create list items for each buoy
+            buoys.forEach((buoy, index) => {
+                const buoyItem = document.createElement('div');
+                buoyItem.className = 'buoy-item';
+                if (index === selectedBuoyIndex) {
+                    buoyItem.classList.add('selected');
+                }
                 
-                participantDiv.addEventListener('click', function() {
-                    selectParticipant(i);
+                const buoyInfo = document.createElement('div');
+                
+                const buoyName = document.createElement('div');
+                buoyName.className = 'buoy-name';
+                buoyName.textContent = buoy.name;
+                
+                const buoyCoordinates = document.createElement('div');
+                buoyCoordinates.className = 'buoy-coordinates';
+                buoyCoordinates.textContent = `${buoy.latitude.toFixed(4)}, ${buoy.longitude.toFixed(4)}`;
+                
+                buoyInfo.appendChild(buoyName);
+                buoyInfo.appendChild(buoyCoordinates);
+                buoyItem.appendChild(buoyInfo);
+                
+                // Add click event to select buoy
+                buoyItem.addEventListener('click', function() {
+                    selectBuoy(index);
                 });
                 
-                grid.appendChild(participantDiv);
-                
-                // Initialize participant data
-                participants[i] = {
-                    number: i,
-                    active: false,
-                    position: null,
-                    lastUpdate: null,
-                    marker: null
-                };
-            }
-        }
-        
-        // Initialize Leaflet map
-        function initializeMap() {
-            // Center on Gdańsk Bay area
-            map = L.map('map').setView([54.6892, 18.4021], 12);
-            
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
-        }
-        
-        // Setup event listeners
-        function setupEventListeners() {
-            document.getElementById('zoom-in').addEventListener('click', function() {
-                map.zoomIn();
-            });
-            
-            document.getElementById('zoom-out').addEventListener('click', function() {
-                map.zoomOut();
-            });
-            
-            document.getElementById('center-map').addEventListener('click', function() {
-                map.setView([54.6892, 18.4021], 12);
-            });
-            
-            // Message sending functionality
-            document.getElementById('send-message-btn').addEventListener('click', sendMessage);
-            
-            // Allow Enter key to send message (Ctrl+Enter for new line)
-            document.getElementById('message-input').addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' && !e.ctrlKey) {
-                    e.preventDefault();
-                    sendMessage();
-                }
+                buoyList.appendChild(buoyItem);
             });
         }
         
-        // Select participant
-        function selectParticipant(number) {
-            // Remove previous selection
-            document.querySelectorAll('.participant-number').forEach(el => {
-                el.classList.remove('selected');
-            });
+        function selectBuoy(index) {
+            // Get buoys
+            const buoys = window.regattaBuoys.getAllBuoys();
             
-            // Add selection to clicked participant
-            const participantEl = document.querySelector(`[data-number="${number}"]`);
-            participantEl.classList.add('selected');
-            
-            selectedParticipant = number;
-            showParticipantInfo(number);
-            
-            // Center map on participant if they have a position
-            if (participants[number].position) {
-                map.setView([participants[number].position.lat, participants[number].position.lng], 15);
-            }
-        }
-        
-        // Show participant info panel
-        function showParticipantInfo(number) {
-            const participant = participants[number];
-            const infoPanel = document.getElementById('participant-info');
-            
-            document.getElementById('info-title').textContent = `Zawodnik #${number}`;
-            
-            const statusEl = document.getElementById('info-status');
-            const statusIndicator = infoPanel.querySelector('.status-indicator');
-            
-            if (participant.active) {
-                statusEl.textContent = 'Śledzenie aktywne';
-                statusIndicator.className = 'status-indicator status-active';
-            } else {
-                statusEl.textContent = 'Nieaktywny';
-                statusIndicator.className = 'status-indicator status-inactive';
-            }
-            
-            const locationEl = document.getElementById('info-location');
-            if (participant.position) {
-                locationEl.textContent = `${participant.position.lat.toFixed(6)}, ${participant.position.lng.toFixed(6)}`;
-            } else {
-                locationEl.textContent = 'Brak lokalizacji';
-            }
-            
-            const timeEl = document.getElementById('info-time');
-            if (participant.lastUpdate) {
-                timeEl.textContent = `Ostatnia aktualizacja: ${new Date(participant.lastUpdate).toLocaleTimeString()}`;
-            } else {
-                timeEl.textContent = 'Brak danych';
-            }
-            
-            infoPanel.style.display = 'block';
-        }
-        
-        // Start tracking system
-        function startTracking() {
-            if (window.trackingCommunication) {
-                window.trackingCommunication.setParticipantUpdateCallback(updateParticipant);
-                window.trackingCommunication.setSOSAlertCallback(handleSOSAlert);
-                window.trackingCommunication.startListening();
-                console.log('Tracking system started');
-            } else {
-                console.log('Tracking communication not available');
-            }
-        }
-        
-        // Update participant data
-        function updateParticipant(data) {
-            console.log('Received participant update:', data);
-            
-            const number = parseInt(data.participantNumber);
-            if (number >= 1 && number <= 200) {
-                const participant = participants[number];
-                
-                // Update participant data - handle both old and new format
-                participant.active = data.status === 'active' || data.active || false;
-                
-                // Convert position format if needed
-                if (data.position) {
-                    if (data.position.latitude !== undefined && data.position.longitude !== undefined) {
-                        // New format: {latitude, longitude}
-                        participant.position = {
-                            lat: data.position.latitude,
-                            lng: data.position.longitude
-                        };
-                    } else if (data.position.lat !== undefined && data.position.lng !== undefined) {
-                        // Old format: {lat, lng}
-                        participant.position = data.position;
-                    }
-                } else {
-                    participant.position = null;
-                }
-                
-                participant.lastUpdate = data.timestamp || Date.now();
-                
-                console.log(`Updated participant #${number}:`, participant);
-                
-                // Update UI
-                updateParticipantUI(number);
-                updateParticipantMarker(number);
-                
-                // Update info panel if this participant is selected
-                if (selectedParticipant === number) {
-                    showParticipantInfo(number);
-                }
-            }
-        }
-        
-        // Update participant UI element
-        function updateParticipantUI(number) {
-            const participantEl = document.querySelector(`[data-number="${number}"]`);
-            const participant = participants[number];
-            
-            if (participant.active) {
-                participantEl.classList.add('active');
-            } else {
-                participantEl.classList.remove('active');
-            }
-        }
-        
-        // Update participant marker on map
-        function updateParticipantMarker(number) {
-            const participant = participants[number];
-            
-            // Remove existing marker
-            if (participant.marker) {
-                map.removeLayer(participant.marker);
-                participant.marker = null;
-            }
-            
-            // Add new marker if participant has position
-            if (participant.position && participant.active) {
-                // Create custom icon with participant number
-                const customIcon = L.divIcon({
-                    className: 'custom-participant-marker',
-                    html: `<div class="marker-content">
-                        <div class="marker-circle">${number}</div>
-                    </div>`,
-                    iconSize: [30, 30],
-                    iconAnchor: [15, 15]
-                });
-                
-                const marker = L.marker([participant.position.lat, participant.position.lng], {
-                    icon: customIcon
-                })
-                    .addTo(map)
-                    .bindPopup(`Zawodnik #${number}`)
-                    .on('click', function() {
-                        selectParticipant(number);
-                    });
-                
-                participant.marker = marker;
-            }
-        }
-        
-        // Handle SOS alert
-        function handleSOSAlert(sosData) {
-            console.log('🚨 SOS ALERT received:', sosData);
-            
-            const number = parseInt(sosData.participantNumber);
-            if (number >= 1 && number <= 200) {
-                const participant = participants[number];
-                
-                // Update participant with SOS status
-                participant.sosAlert = true;
-                participant.sosMessage = sosData.message;
-                participant.sosTimestamp = sosData.timestamp;
-                participant.active = true; // Mark as active
-                
-                // Update position if provided
-                if (sosData.position) {
-                    participant.position = sosData.position;
-                }
-                
-                participant.lastUpdate = sosData.timestamp || Date.now();
-                
-                // Update UI with SOS styling
-                const participantEl = document.querySelector(`[data-number="${number}"]`);
-                participantEl.classList.add('sos');
-                participantEl.classList.add('active');
-                
-                // Update marker with SOS styling
-                updateSOSMarker(number);
-                
-                // Show alert notification
-                alert(`🚨 SYGNAŁ SOS od zawodnika #${number}!\n\n${sosData.message}\n\nLokalizacja: ${sosData.position ? 
-                    `${sosData.position.lat.toFixed(6)}, ${sosData.position.lng.toFixed(6)}` : 'Brak dokładnej lokalizacji'}`);
-                
-                // Auto-select participant and center map
-                selectParticipant(number);
-                if (participant.position) {
-                    map.setView([participant.position.lat, participant.position.lng], 16);
-                }
-                
-                console.log(`SOS alert processed for participant #${number}`);
-            }
-        }
-        
-        // Update SOS marker on map
-        function updateSOSMarker(number) {
-            const participant = participants[number];
-            
-            // Remove existing marker
-            if (participant.marker) {
-                map.removeLayer(participant.marker);
-                participant.marker = null;
-            }
-            
-            // Add SOS marker if participant has position
-            if (participant.position) {
-                // Create SOS icon with red color and flashing effect
-                const sosIcon = L.divIcon({
-                    className: 'custom-participant-marker',
-                    html: `<div class="marker-content">
-                        <div class="marker-circle" style="background-color: #ff4444; animation: sosFlash 1s infinite;">
-                            ${number}
-                        </div>
-                    </div>`,
-                    iconSize: [35, 35],
-                    iconAnchor: [17.5, 17.5]
-                });
-                
-                const marker = L.marker([participant.position.lat, participant.position.lng], {
-                    icon: sosIcon
-                })
-                    .addTo(map)
-                    .bindPopup(`🚨 SOS - Zawodnik #${number}<br>${participant.sosMessage || 'Potrzebuję pomocy!'}`)
-                    .on('click', function() {
-                        selectParticipant(number);
-                    });
-                
-                participant.marker = marker;
-                
-                // Open popup immediately for SOS
-                marker.openPopup();
-            }
-        }
-        
-        // Send message to all participants
-        function sendMessage() {
-            const messageInput = document.getElementById('message-input');
-            const sendBtn = document.getElementById('send-message-btn');
-            const message = messageInput.value.trim();
-            
-            if (!message) {
-                alert('Wpisz komunikat przed wysłaniem');
+            if (index < 0 || index >= buoys.length) {
                 return;
             }
             
-            // Disable button temporarily
-            sendBtn.disabled = true;
-            sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Wysyłanie...';
+            // Set selected index
+            selectedBuoyIndex = index;
             
-            const messageData = {
-                type: 'organizerMessage',
-                message: message,
-                timestamp: Date.now(),
-                sender: 'Organizator'
+            // Update list UI
+            updateBuoyList();
+            
+            // Fill form with buoy data
+            const buoy = buoys[index];
+            document.getElementById('buoy-name').value = buoy.name;
+            document.getElementById('buoy-lat').value = buoy.latitude;
+            document.getElementById('buoy-lng').value = buoy.longitude;
+        }
+        
+        function clearBuoyForm() {
+            document.getElementById('buoy-name').value = '';
+            document.getElementById('buoy-lat').value = '';
+            document.getElementById('buoy-lng').value = '';
+        }
+        
+        function saveBuoy() {
+            // Get form values
+            const name = document.getElementById('buoy-name').value.trim();
+            const latValue = document.getElementById('buoy-lat').value.trim();
+            const lngValue = document.getElementById('buoy-lng').value.trim();
+            
+            // Validate
+            if (!name) {
+                alert('Podaj nazwę boi');
+                document.getElementById('buoy-name').focus();
+                return;
+            }
+            
+            if (!latValue || !lngValue) {
+                alert('Podaj współrzędne boi');
+                if (!latValue) document.getElementById('buoy-lat').focus();
+                else document.getElementById('buoy-lng').focus();
+                return;
+            }
+            
+            const latitude = parseFloat(latValue);
+            const longitude = parseFloat(lngValue);
+            
+            if (isNaN(latitude) || isNaN(longitude)) {
+                alert('Podaj prawidłowe współrzędne');
+                return;
+            }
+            
+            // Create buoy object
+            const buoy = {
+                name: name,
+                latitude: latitude,
+                longitude: longitude
             };
             
-            // Send message via WebSocket
-            if (window.trackingCommunication) {
-                window.trackingCommunication.sendOrganizerMessage(messageData);
+            // Save buoy
+            if (selectedBuoyIndex === -1) {
+                // Add new buoy
+                window.regattaBuoys.addBuoy(buoy, map);
+                console.log('Added new buoy:', buoy);
+                
+                // Show success message
+                const successMessage = document.createElement('div');
+                successMessage.className = 'success-message';
+                successMessage.textContent = `Dodano nową boję: ${name}`;
+                successMessage.style.position = 'fixed';
+                successMessage.style.bottom = '20px';
+                successMessage.style.right = '20px';
+                successMessage.style.backgroundColor = '#4caf50';
+                successMessage.style.color = 'white';
+                successMessage.style.padding = '10px 20px';
+                successMessage.style.borderRadius = '4px';
+                successMessage.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+                successMessage.style.zIndex = '9999';
+                document.body.appendChild(successMessage);
+                
+                // Remove message after 3 seconds
+                setTimeout(() => {
+                    document.body.removeChild(successMessage);
+                }, 3000);
             } else {
-                console.log('Message (demo mode):', messageData);
+                // Update existing buoy
+                window.regattaBuoys.updateBuoy(selectedBuoyIndex, buoy, map);
+                console.log('Updated buoy at index', selectedBuoyIndex, buoy);
             }
             
-            // Clear input and re-enable button
-            messageInput.value = '';
-            setTimeout(() => {
-                sendBtn.disabled = false;
-                sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Wyślij komunikat';
-            }, 1000);
-            
-            console.log('Message sent to all participants:', message);
+            // Clear form and update list
+            clearBuoyForm();
+            selectedBuoyIndex = -1;
+            updateBuoyList();
         }
         
-        // Race Results Management
-        let races = {};
-        let currentRaceId = null;
-        let raceCounter = 0;
-        
-        // Initialize race results functionality
-        function initializeRaceResults() {
-            // Populate participant select
-            const participantSelect = document.getElementById('participant-select');
-            for (let i = 1; i <= 200; i++) {
-                const option = document.createElement('option');
-                option.value = i;
-                option.textContent = `Zawodnik #${i}`;
-                participantSelect.appendChild(option);
-            }
-            
-            // Event listeners
-            document.getElementById('new-race-btn').addEventListener('click', createNewRace);
-            document.getElementById('race-select').addEventListener('change', selectRace);
-            document.getElementById('add-result-btn').addEventListener('click', addResult);
-        }
-        
-        // Create new race
-        function createNewRace() {
-            raceCounter++;
-            const raceId = `race_${raceCounter}`;
-            const raceName = `Wyścig ${raceCounter}`;
-            
-            races[raceId] = {
-                id: raceId,
-                name: raceName,
-                results: {}
-            };
-            
-            // Add to select
-            const raceSelect = document.getElementById('race-select');
-            const option = document.createElement('option');
-            option.value = raceId;
-            option.textContent = raceName;
-            raceSelect.appendChild(option);
-            
-            // Auto-select new race
-            raceSelect.value = raceId;
-            selectRace();
-            
-            console.log(`Created new race: ${raceName}`);
-        }
-        
-        // Select race
-        function selectRace() {
-            const raceSelect = document.getElementById('race-select');
-            const raceId = raceSelect.value;
-            
-            if (raceId && races[raceId]) {
-                currentRaceId = raceId;
-                document.getElementById('current-race-title').textContent = races[raceId].name;
-                document.getElementById('race-results-content').style.display = 'block';
-                displayRaceResults(raceId);
-            } else {
-                currentRaceId = null;
-                document.getElementById('race-results-content').style.display = 'none';
-            }
-        }
-        
-        // Add result to current race
-        function addResult() {
-            if (!currentRaceId) {
-                alert('Wybierz wyścig');
+        function deleteBuoyConfirm() {
+            if (selectedBuoyIndex === -1) {
+                alert('Wybierz boję do usunięcia');
                 return;
             }
             
-            const participantSelect = document.getElementById('participant-select');
-            const positionInput = document.getElementById('position-input');
+            const buoys = window.regattaBuoys.getAllBuoys();
+            const buoy = buoys[selectedBuoyIndex];
             
-            const participantNumber = parseInt(participantSelect.value);
-            const position = parseInt(positionInput.value);
-            
-            if (!participantNumber || !position) {
-                alert('Wybierz zawodnika i wpisz miejsce');
-                return;
-            }
-            
-            if (position < 1 || position > 200) {
-                alert('Miejsce musi być między 1 a 200');
-                return;
-            }
-            
-            // Check if position is already taken
-            const race = races[currentRaceId];
-            const existingParticipant = Object.keys(race.results).find(p => race.results[p] === position);
-            if (existingParticipant) {
-                if (!confirm(`Miejsce ${position} jest już zajęte przez zawodnika #${existingParticipant}. Czy chcesz je zastąpić?`)) {
-                    return;
-                }
-                delete race.results[existingParticipant];
-            }
-            
-            // Add result
-            race.results[participantNumber] = position;
-            
-            // Clear inputs
-            participantSelect.value = '';
-            positionInput.value = '';
-            
-            // Refresh display
-            displayRaceResults(currentRaceId);
-            
-            // Send results to participants
-            broadcastRaceResults();
-            
-            console.log(`Added result: Participant #${participantNumber} - Position ${position} in ${race.name}`);
-        }
-        
-        // Display race results
-        function displayRaceResults(raceId) {
-            const race = races[raceId];
-            const resultsList = document.getElementById('results-list');
-            
-            // Clear current results
-            resultsList.innerHTML = '';
-            
-            if (Object.keys(race.results).length === 0) {
-                resultsList.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">Brak wyników</div>';
-                return;
-            }
-            
-            // Sort results by position
-            const sortedResults = Object.entries(race.results).sort((a, b) => a[1] - b[1]);
-            
-            sortedResults.forEach(([participantNumber, position]) => {
-                const resultItem = document.createElement('div');
-                resultItem.className = 'result-item';
-                resultItem.innerHTML = `
-                    <span class="result-position">${position}.</span>
-                    <span class="result-participant">Zawodnik #${participantNumber}</span>
-                    <button class="delete-result" onclick="deleteResult(${participantNumber})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                `;
-                resultsList.appendChild(resultItem);
-            });
-        }
-        
-        // Delete result
-        function deleteResult(participantNumber) {
-            if (!currentRaceId) return;
-            
-            if (confirm(`Czy na pewno chcesz usunąć wynik zawodnika #${participantNumber}?`)) {
-                delete races[currentRaceId].results[participantNumber];
-                displayRaceResults(currentRaceId);
-                broadcastRaceResults();
-                console.log(`Deleted result for participant #${participantNumber}`);
+            if (confirm(`Czy na pewno chcesz usunąć boję "${buoy.name}"?`)) {
+                window.regattaBuoys.deleteBuoy(selectedBuoyIndex, map);
+                console.log('Deleted buoy at index', selectedBuoyIndex);
+                
+                // Clear form and update list
+                clearBuoyForm();
+                selectedBuoyIndex = -1;
+                updateBuoyList();
             }
         }
-        
-        // Broadcast race results to all participants
-        function broadcastRaceResults() {
-            const resultsData = {
-                type: 'raceResults',
-                races: races,
-                timestamp: Date.now()
-            };
-            
-            if (window.trackingCommunication) {
-                window.trackingCommunication.sendRaceResults(resultsData);
-            } else {
-                console.log('Race results (demo mode):', resultsData);
-            }
-            
-            // Store in localStorage for persistence
-            localStorage.setItem('raceResults', JSON.stringify(races));
-        }
-        
-        // Load saved race results
-        function loadSavedRaceResults() {
-            const saved = localStorage.getItem('raceResults');
-            if (saved) {
-                try {
-                    races = JSON.parse(saved);
-                    
-                    // Rebuild race select options
-                    const raceSelect = document.getElementById('race-select');
-                    Object.values(races).forEach(race => {
-                        const option = document.createElement('option');
-                        option.value = race.id;
-                        option.textContent = race.name;
-                        raceSelect.appendChild(option);
-                    });
-                    
-                    // Update counter
-                    raceCounter = Object.keys(races).length;
-                    
-                    console.log('Loaded saved race results:', races);
-                } catch (e) {
-                    console.error('Error loading saved race results:', e);
-                }
-            }
-        }
-        
     </script>
 </body>
 </html>
