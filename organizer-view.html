@@ -701,7 +701,305 @@
             
             // Initialize buoy management
             initBuoyManagement();
+            
+            // Initialize message sending functionality
+            initMessageSending();
+            
+            // Initialize race results functionality
+            initRaceResults();
         });
+        
+        // Message sending functionality
+        function initMessageSending() {
+            const sendMessageBtn = document.getElementById('send-message-btn');
+            const messageInput = document.getElementById('message-input');
+            
+            if (sendMessageBtn && messageInput) {
+                sendMessageBtn.addEventListener('click', function() {
+                    const message = messageInput.value.trim();
+                    
+                    if (!message) {
+                        alert('Wpisz treść komunikatu');
+                        messageInput.focus();
+                        return;
+                    }
+                    
+                    // Create message data
+                    const messageData = {
+                        message: message,
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    // Send message using the correct function
+                    if (window.trackingCommunication) {
+                        window.trackingCommunication.sendOrganizerMessage(messageData);
+                        console.log('Sent organizer message:', messageData);
+                        
+                        // Clear input and show success message
+                        messageInput.value = '';
+                        
+                        // Show success message
+                        const successMessage = document.createElement('div');
+                        successMessage.className = 'success-message';
+                        successMessage.textContent = 'Komunikat został wysłany do wszystkich zawodników';
+                        successMessage.style.position = 'fixed';
+                        successMessage.style.bottom = '20px';
+                        successMessage.style.right = '20px';
+                        successMessage.style.backgroundColor = '#4caf50';
+                        successMessage.style.color = 'white';
+                        successMessage.style.padding = '10px 20px';
+                        successMessage.style.borderRadius = '4px';
+                        successMessage.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+                        successMessage.style.zIndex = '9999';
+                        document.body.appendChild(successMessage);
+                        
+                        // Remove message after 3 seconds
+                        setTimeout(() => {
+                            document.body.removeChild(successMessage);
+                        }, 3000);
+                    } else {
+                        console.error('trackingCommunication not available');
+                        alert('Błąd: Nie można wysłać komunikatu. System komunikacji nie jest dostępny.');
+                    }
+                });
+            }
+        }
+        
+        // Race results functionality
+        function initRaceResults() {
+            const raceSelect = document.getElementById('race-select');
+            const newRaceBtn = document.getElementById('new-race-btn');
+            const raceResultsContent = document.getElementById('race-results-content');
+            const currentRaceTitle = document.getElementById('current-race-title');
+            const participantSelect = document.getElementById('participant-select');
+            const positionInput = document.getElementById('position-input');
+            const addResultBtn = document.getElementById('add-result-btn');
+            const resultsList = document.getElementById('results-list');
+            
+            // Race data storage
+            let races = {};
+            let currentRaceId = null;
+            
+            // Initialize race select
+            function updateRaceSelect() {
+                raceSelect.innerHTML = '<option value="">Wybierz wyścig</option>';
+                
+                Object.keys(races).forEach(raceId => {
+                    const option = document.createElement('option');
+                    option.value = raceId;
+                    option.textContent = races[raceId].name;
+                    raceSelect.appendChild(option);
+                });
+            }
+            
+            // Initialize participant select
+            function updateParticipantSelect() {
+                participantSelect.innerHTML = '<option value="">Wybierz zawodnika</option>';
+                
+                // Add options for participants 1-200
+                for (let i = 1; i <= 200; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = `Zawodnik #${i}`;
+                    participantSelect.appendChild(option);
+                }
+            }
+            
+            // Update results list
+            function updateResultsList() {
+                if (!currentRaceId || !races[currentRaceId]) {
+                    resultsList.innerHTML = '<div style="padding: 10px; text-align: center; color: #666;">Brak wyników</div>';
+                    return;
+                }
+                
+                const race = races[currentRaceId];
+                const results = race.results || {};
+                
+                // Convert results to array for sorting
+                const sortedResults = [];
+                Object.keys(results).forEach(participantId => {
+                    sortedResults.push({
+                        participantId: parseInt(participantId),
+                        position: results[participantId]
+                    });
+                });
+                
+                // Sort by position
+                sortedResults.sort((a, b) => a.position - b.position);
+                
+                // Update list
+                if (sortedResults.length === 0) {
+                    resultsList.innerHTML = '<div style="padding: 10px; text-align: center; color: #666;">Brak wyników</div>';
+                    return;
+                }
+                
+                resultsList.innerHTML = '';
+                sortedResults.forEach(result => {
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'result-item';
+                    
+                    const position = document.createElement('span');
+                    position.className = 'result-position';
+                    position.textContent = `${result.position}.`;
+                    
+                    const participant = document.createElement('span');
+                    participant.className = 'result-participant';
+                    participant.textContent = `Zawodnik #${result.participantId}`;
+                    
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'delete-result';
+                    deleteBtn.innerHTML = '<i class="fas fa-times"></i>';
+                    deleteBtn.addEventListener('click', function() {
+                        deleteResult(result.participantId);
+                    });
+                    
+                    resultItem.appendChild(position);
+                    resultItem.appendChild(participant);
+                    resultItem.appendChild(deleteBtn);
+                    resultsList.appendChild(resultItem);
+                });
+            }
+            
+            // Add new race
+            function addNewRace() {
+                const raceName = prompt('Nazwa wyścigu:');
+                if (!raceName) return;
+                
+                const raceId = 'race_' + Date.now();
+                races[raceId] = {
+                    id: raceId,
+                    name: raceName,
+                    results: {}
+                };
+                
+                updateRaceSelect();
+                
+                // Select the new race
+                raceSelect.value = raceId;
+                selectRace(raceId);
+                
+                // Send race results to participants
+                sendRaceResults();
+            }
+            
+            // Select race
+            function selectRace(raceId) {
+                if (!raceId) {
+                    raceResultsContent.style.display = 'none';
+                    currentRaceId = null;
+                    return;
+                }
+                
+                currentRaceId = raceId;
+                const race = races[raceId];
+                
+                if (race) {
+                    currentRaceTitle.textContent = race.name;
+                    raceResultsContent.style.display = 'block';
+                    updateResultsList();
+                } else {
+                    raceResultsContent.style.display = 'none';
+                }
+            }
+            
+            // Add result
+            function addResult() {
+                if (!currentRaceId) {
+                    alert('Wybierz wyścig');
+                    return;
+                }
+                
+                const participantId = participantSelect.value;
+                const position = parseInt(positionInput.value);
+                
+                if (!participantId) {
+                    alert('Wybierz zawodnika');
+                    participantSelect.focus();
+                    return;
+                }
+                
+                if (!position || position < 1) {
+                    alert('Podaj prawidłową pozycję');
+                    positionInput.focus();
+                    return;
+                }
+                
+                // Add result
+                races[currentRaceId].results[participantId] = position;
+                
+                // Update UI
+                updateResultsList();
+                
+                // Clear inputs
+                participantSelect.value = '';
+                positionInput.value = '';
+                
+                // Send race results to participants
+                sendRaceResults();
+            }
+            
+            // Delete result
+            function deleteResult(participantId) {
+                if (!currentRaceId || !races[currentRaceId]) return;
+                
+                if (confirm('Czy na pewno chcesz usunąć ten wynik?')) {
+                    delete races[currentRaceId].results[participantId];
+                    updateResultsList();
+                    
+                    // Send race results to participants
+                    sendRaceResults();
+                }
+            }
+            
+            // Send race results to participants
+            function sendRaceResults() {
+                const resultsData = {
+                    races: races
+                };
+                
+                if (window.trackingCommunication) {
+                    window.trackingCommunication.sendRaceResults(resultsData);
+                    console.log('Sent race results:', resultsData);
+                    
+                    // Save to localStorage as backup
+                    localStorage.setItem('raceResults', JSON.stringify(races));
+                } else {
+                    console.error('trackingCommunication not available');
+                }
+            }
+            
+            // Load saved races
+            function loadSavedRaces() {
+                const saved = localStorage.getItem('raceResults');
+                if (saved) {
+                    try {
+                        races = JSON.parse(saved);
+                        updateRaceSelect();
+                    } catch (e) {
+                        console.error('Error loading saved races:', e);
+                    }
+                }
+            }
+            
+            // Add event listeners
+            if (newRaceBtn) {
+                newRaceBtn.addEventListener('click', addNewRace);
+            }
+            
+            if (raceSelect) {
+                raceSelect.addEventListener('change', function() {
+                    selectRace(this.value);
+                });
+            }
+            
+            if (addResultBtn) {
+                addResultBtn.addEventListener('click', addResult);
+            }
+            
+            // Initialize
+            updateParticipantSelect();
+            loadSavedRaces();
+        }
         
         // Buoy management functionality
         let selectedBuoyIndex = -1;

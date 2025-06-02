@@ -361,16 +361,36 @@ function sendMessage() {
     
     if (message) {
         if (window.trackingCommunication) {
-            window.trackingCommunication.sendMessageToAll(message)
-                .then(() => {
-                    console.log('Message sent successfully:', message);
-                    messageInput.value = '';
-                    alert('Komunikat został wysłany do wszystkich zawodników.');
-                })
-                .catch(error => {
-                    console.error('Error sending message:', error);
-                    alert('Błąd podczas wysyłania komunikatu. Spróbuj ponownie.');
-                });
+            // Create message data
+            const messageData = {
+                message: message,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Use the correct function to send the message
+            window.trackingCommunication.sendOrganizerMessage(messageData);
+            console.log('Message sent successfully:', messageData);
+            messageInput.value = '';
+            
+            // Show success message
+            const successMessage = document.createElement('div');
+            successMessage.className = 'success-message';
+            successMessage.textContent = 'Komunikat został wysłany do wszystkich zawodników';
+            successMessage.style.position = 'fixed';
+            successMessage.style.bottom = '20px';
+            successMessage.style.right = '20px';
+            successMessage.style.backgroundColor = '#4caf50';
+            successMessage.style.color = 'white';
+            successMessage.style.padding = '10px 20px';
+            successMessage.style.borderRadius = '4px';
+            successMessage.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+            successMessage.style.zIndex = '9999';
+            document.body.appendChild(successMessage);
+            
+            // Remove message after 3 seconds
+            setTimeout(() => {
+                document.body.removeChild(successMessage);
+            }, 3000);
         } else {
             console.error('Tracking communication not available');
             alert('System komunikacji nie jest dostępny. Spróbuj ponownie później.');
